@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: field_register_db
+    environment:
+      POSTGRES_USER: fr
+      POSTGRES_PASSWORD: fr
+      POSTGRES_DB: field_register
+    ports:
+      - "54329:5432"
+    volumes:
+      - fr_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fr -d field_register"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  fr_pgdata:
