@@ -1,0 +1,38 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Overview", "x": 0, "y": 0, "w": 1440, "h": 900 },
+    { "file": "Schools.dc.html", "title": "Schools", "x": 1520, "y": 0, "w": 1440, "h": 900 },
+    { "file": "ReportCard.dc.html", "title": "School report card", "x": 3040, "y": 0, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    {
+      "id": "brief",
+      "x": 0,
+      "y": -170,
+      "w": 900,
+      "text": "Sarvekshan — school audit platform, desktop web.\nThree connected screens: district overview, searchable school index, and a school's report card.\nBuilt on what actually works in Linear, Vercel and ProPublica's public databases — persistent nav, flat surfaces with hairline borders and no drop shadows, hierarchy from font weight rather than size, 56px rows, summary up top and detail one click deep."
+    },
+    {
+      "id": "note-overview",
+      "x": 0,
+      "y": 940,
+      "w": 440,
+      "text": "OVERVIEW\nWhat a coordinator opens on. Four numbers, the survival curve, and the reversion list — repairs that were fixed and have broken again. That list is the thing no other tool produces."
+    },
+    {
+      "id": "note-schools",
+      "x": 1520,
+      "y": 940,
+      "w": 440,
+      "text": "SCHOOLS\nThe ProPublica pattern: search-led, sortable, comparable. Every school in the district is listed whether or not we have worked there — and an unaudited school shows as a visible grey gap rather than being quietly left out."
+    },
+    {
+      "id": "note-card",
+      "x": 3040,
+      "y": 940,
+      "w": 440,
+      "text": "REPORT CARD\nThe audit itself. Grant reconciliation reads left to right — sanctioned, released, accounted, actually seen on site — and the drop from ₹50,000 to ₹13,000 is the finding. Right column is the evidence: same spot photographed over time, the voice note, and the follow-up checks."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

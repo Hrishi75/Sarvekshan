@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #2B5CFF; text-decoration: none; }
+    a:hover { color: #1D45D0; }
+  </style>
+</helmet>
+
+<div style="width: 1440px; height: 900px; background: #F6F6F4; color: #16171A; font-family: 'Geist', system-ui, sans-serif; display: flex; overflow: hidden;">
+
+  <!-- collapsed rail -->
+  <div style="width: 56px; flex: none; background: #FFFFFF; border-right: 1px solid #E3E3DF; display: flex; flex-direction: column; align-items: center; padding-top: 18px; gap: 5px;">
+    <div style="width: 26px; height: 26px; border-radius: 7px; background: #2B5CFF; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-4.5L19 9v12"/><path d="M10 21v-5h4v5"/></svg>
+    </div>
+    <div style="width: 34px; height: 34px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: #A0A4AC;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+    </div>
+    <div style="width: 34px; height: 34px; border-radius: 7px; background: #EEF2FF; display: flex; align-items: center; justify-content: center; color: #2B5CFF;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V9l7-4.5L19 9v12"/><path d="M10 21v-5h4v5"/></svg>
+    </div>
+    <div style="width: 34px; height: 34px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: #A0A4AC;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4.5"/><path d="M12 17.5h.01"/><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20.4h15.6a2 2 0 0 0 1.7-3l-7.8-13.5a2 2 0 0 0-3.4 0z"/></svg>
+    </div>
+  </div>
+
+  <div style="flex-grow: 1; display: flex; flex-direction: column; min-width: 0;">
+
+    <!-- search-led header, the public-database pattern -->
+    <div style="background: #FFFFFF; border-bottom: 1px solid #E3E3DF; padding: 22px 28px 0 28px; flex: none;">
+      <h1 style="font-size: 24px; font-weight: 600; letter-spacing: -0.025em; margin: 0 0 3px 0;">Schools</h1>
+      <div style="font-size: 13.5px; color: #83878F;">Every government school in the district, whether or not we have worked there.</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 16px;">
+        <div style="flex-grow: 1; max-width: 480px; display: flex; align-items: center; gap: 9px; height: 38px; background: #F6F6F4; border: 1px solid #E3E3DF; border-radius: 8px; padding: 0 12px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#83878F" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span style="font-size: 13.5px; color: #16171A;">rampur</span>
+          <span style="width: 1px; height: 15px; background: #2B5CFF; margin-left: -3px;"></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #E3E3DF; border-radius: 7px; font-size: 13px; font-weight: 500; color: #55585F;">
+          All blocks
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; background: #FBE5E2; border: 1px solid #F2C9C3; border-radius: 7px; font-size: 13px; font-weight: 500; color: #D93A2B;">
+          Has findings
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </div>
+        <div style="flex-grow: 1;"></div>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 12px; color: #83878F;">62 of 248</span>
+      </div>
+
+      <!-- column headers -->
+      <div style="display: flex; align-items: center; font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: 0.11em; color: #A0A4AC; padding: 18px 0 9px 0;">
+        <span style="flex-grow: 1; min-width: 0;">SCHOOL</span>
+        <span style="width: 74px; text-align: right;">PUPILS</span>
+        <span style="width: 118px; text-align: right; color: #16171A;">SCORE &#9660;</span>
+        <span style="width: 128px; text-align: center;">FACILITIES</span>
+        <span style="width: 104px; text-align: right;">GRANT</span>
+        <span style="width: 92px; text-align: right;">12-MO</span>
+        <span style="width: 104px; text-align: right;">AUDITED</span>
+      </div>
+    </div>
+
+    <!-- rows -->
+    <div style="flex-grow: 1; overflow: hidden;">
+
+      <!-- row 1 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt UPS Rampur</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09014782 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">214</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 41%; height: 100%; background: #D93A2B; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #D93A2B; width: 20px; text-align: right;">41</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #D93A2B;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #D93A2B;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;50,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,4 12,5 22,8 32,7 42,12 52,13 62,17 74,19" fill="none" stroke="#D93A2B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">4 days ago</span>
+      </div>
+
+      <!-- row 2 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt PS Nariyawal</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09018334 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">74</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 44%; height: 100%; background: #D93A2B; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #D93A2B; width: 20px; text-align: right;">44</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #D93A2B;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;25,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,6 12,7 22,6 32,10 42,11 52,14 62,15 74,17" fill="none" stroke="#D93A2B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">11 days ago</span>
+      </div>
+
+      <!-- row 3 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt PS Itaunja</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09012205 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">88</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 52%; height: 100%; background: #B7791F; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #B7791F; width: 20px; text-align: right;">52</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #D93A2B;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;25,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,9 12,8 22,10 32,9 42,11 52,10 62,12 74,13" fill="none" stroke="#B7791F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">3 weeks ago</span>
+      </div>
+
+      <!-- row 4 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt UPS Kesarganj</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09011940 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">268</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 61%; height: 100%; background: #B7791F; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #B7791F; width: 20px; text-align: right;">61</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;75,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,12 12,11 22,12 32,10 42,9 52,9 62,8 74,8" fill="none" stroke="#B7791F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">6 weeks ago</span>
+      </div>
+
+      <!-- row 5 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt UPS Dhaurahra</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09016671 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">189</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 68%; height: 100%; background: #B7791F; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #B7791F; width: 20px; text-align: right;">68</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;50,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,14 12,13 22,11 32,11 42,9 52,8 62,7 74,6" fill="none" stroke="#0B8F5C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">2 days ago</span>
+      </div>
+
+      <!-- row 6 -->
+      <div style="display: flex; align-items: center; background: #FFFFFF; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em;">Govt PS Bhagwantpur</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC; margin-top: 2px;">09013028 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">96</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <div style="width: 46px; height: 5px; border-radius: 999px; background: #EDEDEA; overflow: hidden;"><div style="width: 79%; height: 100%; background: #0B8F5C; border-radius: 999px;"></div></div>
+          <span style="font-family: 'Geist Mono', monospace; font-size: 13px; font-weight: 600; color: #0B8F5C; width: 20px; text-align: right;">79</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #0B8F5C;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #B7791F;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #55585F;">&#8377;25,000</span>
+        <div style="width: 92px; display: flex; justify-content: flex-end;">
+          <svg viewBox="0 0 76 22" style="width: 76px; height: 22px;"><polyline points="2,16 12,15 22,13 32,12 42,10 52,8 62,7 74,5" fill="none" stroke="#0B8F5C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #83878F;">9 days ago</span>
+      </div>
+
+      <!-- unaudited row: the gap is visible, not hidden -->
+      <div style="display: flex; align-items: center; background: #FBFBF9; border-bottom: 1px solid #EDEDEA; padding: 0 28px; height: 56px;">
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-size: 13.5px; font-weight: 500; letter-spacing: -0.005em; color: #83878F;">Govt PS Chandpur</div>
+          <div style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #C0C3C9; margin-top: 2px;">09019552 &middot; Rampur</div>
+        </div>
+        <span style="width: 74px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #A0A4AC;">118</span>
+        <div style="width: 118px; display: flex; align-items: center; justify-content: flex-end; gap: 9px;">
+          <span style="font-family: 'Geist Mono', monospace; font-size: 11px; color: #A0A4AC;">not audited</span>
+        </div>
+        <div style="width: 128px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+          <span style="width: 15px; height: 5px; border-radius: 2px; background: #E3E3DF;"></span>
+        </div>
+        <span style="width: 104px; text-align: right; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: #A0A4AC;">&#8377;25,000</span>
+        <div style="width: 92px;"></div>
+        <span style="width: 104px; text-align: right; font-size: 12.5px; color: #C0C3C9;">&mdash;</span>
+      </div>
+
+      <div style="background: #FFFFFF; padding: 14px 28px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 12.5px; color: #83878F;">Showing 7 of 62</span>
+        <div style="flex-grow: 1;"></div>
+        <div style="display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border: 1px solid #E3E3DF; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: #55585F;">Load more</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
