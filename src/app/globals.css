@@ -1,26 +1,70 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Sarvekshan — design tokens.
+   Flat surfaces, 1px hairlines, no drop shadows. Hierarchy comes from font
+   weight rather than size. Cobalt is the only brand colour; green/amber/red
+   stay strictly semantic so a status never competes with the brand. */
+@theme {
+  --color-canvas:     #F6F6F4;
+  --color-surface:    #FFFFFF;
+  --color-surface-2:  #FAFAF8;
+
+  --color-ink:        #16171A;
+  --color-body:       #55585F;
+  --color-mute:       #83878F;
+  --color-faint:      #A0A4AC;
+
+  --color-hair:       #E3E3DF;
+  --color-hair-soft:  #EDEDEA;
+
+  --color-brand:      #2B5CFF;
+  --color-brand-soft: #EEF2FF;
+
+  --color-good:       #0B8F5C;
+  --color-good-soft:  #DFF3EA;
+  --color-warn:       #B7791F;
+  --color-warn-soft:  #FBF0DA;
+  --color-bad:        #D93A2B;
+  --color-bad-soft:   #FBE5E2;
+
+  /* chart series — validated for CVD separation on a white surface */
+  --color-s1: #3B6FD4;
+  --color-s2: #B26A00;
+  --color-s3: #0E9E7A;
+  --color-s4: #8B47D6;
+
+  --font-sans:    var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif:   var(--font-instrument-serif), Georgia, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html, body { height: 100%; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+}
+
+/* every number in this product is tabular */
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* uppercase micro-labels above data */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.59rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
