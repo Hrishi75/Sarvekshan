@@ -1,69 +1,208 @@
-import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { q, q1 } from "@/lib/db";
+import { currentUser } from "@/lib/session";
+import { survivalByWorkType } from "@/lib/survival";
+import { findingsFor } from "@/lib/findings";
+import { AppShell } from "@/components/AppShell";
+import { SurvivalChart } from "@/components/SurvivalChart";
+import { Card, Tag, rupees } from "@/components/ui";
+import { IconExport, IconUp, IconDown } from "@/components/icons";
 
-export default function Home() {
+export default async function Overview() {
+  const user = await currentUser();
+  if (!user) redirect("/signin");
+
+  const stats = await q1<{
+    schools: string;
+    avg_score: string | null;
+    audits_month: string;
+    audits_prev: string;
+    released: string | null;
+    verified: string | null;
+    reversions: string;
+    audits_by_week: number[];
+  }>(
+    `SELECT
+      (SELECT count(*) FROM schools WHERE org_id=$1)                                AS schools,
+      (SELECT round(avg(score)) FROM school_scores WHERE org_id=$1)                 AS avg_score,
+      (SELECT count(*) FROM visits
+        WHERE org_id=$1 AND occurred_at >= date_trunc('month', current_date))       AS audits_month,
+      (SELECT count(*) FROM visits
+        WHERE org_id=$1
+          AND occurred_at >= date_trunc('month', current_date) - interval '1 month'
+          AND occurred_at <  date_trunc('month', current_date))                     AS audits_prev,
+      (SELECT sum(amount_released_paise) FROM grants WHERE org_id=$1)               AS released,
+      (SELECT sum(amount_verified_paise) FROM grants WHERE org_id=$1)               AS verified,
+      (SELECT count(*) FROM reversions r JOIN schools s ON s.id=r.school_id
+        WHERE s.org_id=$1)                                                          AS reversions,
+      (SELECT coalesce(array_agg(n ORDER BY wk), '{}') FROM (
+         SELECT date_trunc('week', occurred_at) AS wk, count(*)::int AS n
+           FROM visits WHERE org_id=$1 AND occurred_at > current_date - 56
+          GROUP BY 1 ORDER BY 1
+       ) w)                                                                         AS audits_by_week`,
+    [user.org_id]
+  );
+
+  const scoreTrend = await q<{ n: string }>(
+    `SELECT count(*)::text AS n FROM checks WHERE org_id=$1 AND state='done'`,
+    [user.org_id]
+  );
+
+  const findings = (await findingsFor(user.org_id, 5));
+
+  const survival = await survivalByWorkType(user.org_id);
+
+  const avg = stats?.avg_score == null ? null : Number(stats.avg_score);
+  const auditsMonth = Number(stats?.audits_month ?? 0);
+  const auditsPrev = Number(stats?.audits_prev ?? 0);
+  const auditsDelta = auditsMonth - auditsPrev;
+  const released = Number(stats?.released ?? 0);
+  const verified = Number(stats?.verified ?? 0);
+  const weeks = stats?.audits_by_week ?? [];
+  const worstSeries = survival[0];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <AppShell user={user}>
+      <div className="p-6">
+        <div className="mb-5 flex items-end justify-between">
+          <div>
+            <h1 className="text-[24px] font-semibold tracking-[-0.025em]">Lucknow district</h1>
+            <p className="mt-[3px] text-[13.5px] text-mute">
+              {stats?.schools ?? 0} schools tracked · {scoreTrend[0]?.n ?? 0} follow-up checks
+              completed
+            </p>
+          </div>
+          <button className="inline-flex h-[31px] items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body">
+            <IconExport size={13} />
+            Export
+          </button>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* stat row */}
+        <div className="mb-3 grid grid-cols-4 gap-3">
+          <Card>
+            <div className="mb-[9px] text-[12px] font-medium text-mute">Average score</div>
+            <div className="flex items-baseline gap-2">
+              <span className="num text-[27px] font-semibold tracking-[-0.02em]">{avg ?? "—"}</span>
+            </div>
+            <p className="mt-[11px] text-[12px] leading-[1.4] text-mute">
+              across {stats?.schools ?? 0} schools
+            </p>
+          </Card>
+
+          <Card>
+            <div className="mb-[9px] text-[12px] font-medium text-mute">Audits this month</div>
+            <div className="flex items-baseline gap-2">
+              <span className="num text-[27px] font-semibold tracking-[-0.02em]">{auditsMonth}</span>
+              {auditsPrev > 0 && (
+                <span
+                  className={`num inline-flex items-center gap-[2px] text-[11.5px] font-semibold ${
+                    auditsDelta >= 0 ? "text-good" : "text-bad"
+                  }`}
+                >
+                  {auditsDelta >= 0 ? <IconUp size={11} /> : <IconDown size={11} />}
+                  {Math.abs(auditsDelta)}
+                </span>
+              )}
+            </div>
+            <div className="mt-[11px] flex h-[26px] items-end gap-[2.5px]">
+              {weeks.length > 0 ? (
+                weeks.map((n, i) => (
+                  <span
+                    key={i}
+                    className={`grow rounded-[1.5px] ${i === weeks.length - 1 ? "bg-brand" : "bg-hair"}`}
+                    style={{ height: `${Math.max(8, (n / Math.max(...weeks)) * 100)}%` }}
+                  />
+                ))
+              ) : (
+                <span className="text-[12px] text-faint">no visits yet</span>
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="mb-[9px] text-[12px] font-medium text-mute">Grants tracked</div>
+            <div className="num text-[27px] font-semibold tracking-[-0.02em]">
+              {rupees(released, true)}
+            </div>
+            <p className="mt-[11px] text-[12px] leading-[1.4] text-mute">
+              <span className="num font-semibold text-bad">
+                {rupees(released - verified, true)}
+              </span>{" "}
+              unverified on site
+            </p>
+          </Card>
+
+          <Card>
+            <div className="mb-[9px] text-[12px] font-medium text-mute">Reverted repairs</div>
+            <div className="num text-[27px] font-semibold tracking-[-0.02em] text-bad">
+              {stats?.reversions ?? 0}
+            </div>
+            <p className="mt-[11px] text-[12px] leading-[1.4] text-mute">
+              fixed, then broken again
+            </p>
+          </Card>
         </div>
-      </main>
-    </div>
+
+        {/* survival + findings */}
+        <div className="grid grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-3">
+          <Card className="!p-[18px_20px_14px_20px]">
+            <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
+              What survives after we leave
+            </div>
+            <p className="mb-[14px] mt-[2px] text-[12.5px] text-mute">
+              Share still working, by days since the repair
+            </p>
+            <SurvivalChart series={survival} />
+            {worstSeries && (
+              <p className="mt-1 border-t border-hair-soft pt-[11px] text-[12.5px] leading-[1.5] text-body">
+                <strong className="font-semibold text-ink">{worstSeries.label}</strong> is the
+                weakest line here. Missed checks are excluded from the denominator rather than
+                counted as working.
+              </p>
+            )}
+          </Card>
+
+          <Card pad={false} className="flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-[18px] pb-3 pt-4">
+              <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Needs attention</span>
+              <span className="num text-[11px] text-faint">{findings.length}</span>
+            </div>
+            {findings.length === 0 ? (
+              <p className="px-[18px] pb-6 text-[13px] text-mute">Nothing outstanding.</p>
+            ) : (
+              findings.map((f, i) => (
+                <Link
+                  key={i}
+                  href={`/schools/${f.school_id}`}
+                  className="flex items-start gap-[11px] border-t border-hair-soft px-[18px] py-[11px] hover:bg-surface-2"
+                >
+                  <span
+                    className={`mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full ${
+                      f.tone === "bad" ? "bg-bad" : "bg-warn"
+                    }`}
+                  />
+                  <span className="min-w-0 grow">
+                    <span className="block truncate text-[13px] font-medium tracking-[-0.005em]">
+                      {f.school_name}
+                    </span>
+                    <span className="mt-px block text-[12px] text-mute">{f.detail}</span>
+                  </span>
+                  <Tag tone={f.tone === "bad" ? "bad" : "warn"}>{f.kind}</Tag>
+                </Link>
+              ))
+            )}
+            <div className="grow" />
+            <Link
+              href="/findings"
+              className="border-t border-hair-soft px-[18px] py-[10px] text-[12.5px] font-medium text-brand"
+            >
+              View all findings →
+            </Link>
+          </Card>
+        </div>
+      </div>
+    </AppShell>
   );
 }
