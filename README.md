@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Field Register
 
-## Getting Started
+An operations tool for a team doing repair work in village government schools.
+It records what a school needed, what was fixed, what it cost — and it is the only
+part of the process that finds out whether the repair was still working a year later.
 
-First, run the development server:
+Built around one rule: **if it is slower than WhatsApp, it is dead.** The capture
+flow targets under sixty seconds, needs no typing, and completes with the network off.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run db:migrate     # applies db/migrations/*.sql
+npm run seed           # 12 schools, 44 works, a year of follow-up checks
+npm run dev            # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires a PostgreSQL 16+ database with the `cube` and `earthdistance` extensions
+available (both ship with a standard Postgres install). Point `DATABASE_URL` in
+`.env.local` at it. `docker-compose.yml` is provided as an alternative to a local server.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Sign-in is a development stub at `/signin` — pick any seeded user. Phone OTP replaces
+it without changing anything downstream; every page reads the same `SessionUser` shape.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## The four objects
 
-## Learn More
+```
+SCHOOL          the permanent record, one per school forever
+ └─ VISIT       someone went and looked
+     └─ WORK    we decided to fix something — cost, materials, who did it
+         └─ CHECK   did it survive? +7 / +90 / +180 / +365 days
+```
 
-To learn more about Next.js, take a look at the following resources:
+Resist adding a fifth.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Why the follow-up engine is a database trigger
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`works_schedule_checks` (see `db/migrations/0002_followup_engine.sql`) writes four
+future checks the moment work is marked done, and assigns them to a **local resident
+checker who did not do the work**. It is a trigger rather than application code so
+that no code path — an import, a bulk edit, a future API — can quietly skip it.
 
-## Deploy on Vercel
+`checks_derive_independence` computes `independent` / `affiliated` / `self` from who
+did the work versus who checked it. It is derived, never hand-entered. Self-checks are
+recorded and displayed rather than blocked — sometimes the volunteer is the only person
+in the village with a smartphone — but they carry no weight in the survival figures.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Offline is the baseline, not a feature
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+A check that fails to upload is a check that never happened, and the volunteer will
+not attempt it twice. So:
+
+- Every capture is written to IndexedDB (`src/lib/offline.ts`) before anything else.
+  The UI says **saved**, never *uploaded*.
+- Photos are compressed to ~250 KB on-device before they enter the queue.
+- Every record carries a device-generated `client_uuid`, and the server upserts on it.
+  Retrying the same payload after a dropped connection is a verified no-op.
+- Media uploads go one at a time so a single failed photo cannot block the batch.
+
+## Survival, and cost per lasting outcome
+
+`/survival` is what the whole system exists to produce. For each work type it shows the
+share still functional at each checkpoint, then divides total spend by how much is still
+working — the true cost, typically several times the headline figure.
+
+Two deliberate choices in `src/lib/survival.ts`:
+
+- **A missed check is excluded from the denominator, never counted as working.** An
+  unchecked school is a gap in the record, not a pass.
+- **Zero survival is a finding, not a missing value.** When nothing survived to the last
+  checkpoint, the row says so explicitly instead of rendering blank.
+
+## What is not built yet
+
+- Phone OTP auth (stub at `/signin`)
+- WhatsApp reminders and the intake bot — start the Business API application early,
+  template approval is slow and sits on the critical path
+- The ghost-overlay camera for repeat photography (`photo_points` schema is in place;
+  the capture UI currently takes a plain photo)
+- Work-order editing, bill OCR, the auto-assembled donor report
+- The public per-school share page (`schools.is_public` exists, off by default)
+- Server-side face blur on ingest
+
+## Layout
+
+```
+db/migrations/     schema and the follow-up engine
+scripts/seed.mjs   demo data with a realistic survival profile
+src/lib/           db, session, offline queue, survival maths, storage
+src/app/visit/     the sixty-second capture flow — the screen it all depends on
+src/app/checks/    follow-up checks, and completing one
+src/app/inbox/     coordinator triage
+src/app/survival/  what is still working
+```
