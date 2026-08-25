@@ -1,0 +1,221 @@
+import { Pool } from "pg";
+import { readFileSync } from "node:fs";
+import crypto from "node:crypto";
+
+const env = Object.fromEntries(
+  readFileSync(new URL("../.env.local", import.meta.url), "utf8")
+    .split("\n").filter(Boolean).map((l) => l.split(/=(.*)/s).slice(0, 2))
+);
+const pool = new Pool({ connectionString: env.DATABASE_URL });
+const uid = () => crypto.randomUUID();
+const hash = (p) => crypto.createHash("sha256").update(p).digest("hex");
+const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+const SCHOOLS = [
+  ["Govt UPS Rampur",        "Rampur",      26.8520, 80.9490, 214],
+  ["Govt PS Bhagwantpur",    "Bhagwantpur", 26.8710, 80.9310, 96],
+  ["Govt UPS Kesarganj",     "Kesarganj",   26.8330, 80.9720, 268],
+  ["Govt PS Nariyawal",      "Nariyawal",   26.8905, 80.9155, 74],
+  ["Govt UPS Sarai Mohan",   "Sarai Mohan", 26.8188, 80.9885, 331],
+  ["Govt PS Chandpur",       "Chandpur",    26.9012, 80.9402, 118],
+  ["Govt UPS Dhaurahra",     "Dhaurahra",   26.8442, 80.9008, 189],
+  ["Govt PS Itaunja",        "Itaunja",     26.9188, 80.9633, 88],
+  ["Govt UPS Mohanlalganj",  "Mohanlalganj",26.8071, 80.9241, 402],
+  ["Govt PS Bakshi Ka Talab","BKT",         26.9350, 80.9080, 142],
+  ["Govt UPS Gosaiganj",     "Gosaiganj",   26.7955, 81.0102, 236],
+  ["Govt PS Kakori",         "Kakori",      26.8615, 80.8380, 109],
+];
+
+// work types with a plausible survival profile — paint holds, electrical does not
+const PROFILE = {
+  toilet_repair:     { fail7: 0.02, fail90: 0.28, fail180: 0.46, fail365: 0.67 },
+  water_handpump:    { fail7: 0.01, fail90: 0.19, fail180: 0.32, fail365: 0.48 },
+  water_tank:        { fail7: 0.03, fail90: 0.22, fail180: 0.35, fail365: 0.50 },
+  electrical_fans:   { fail7: 0.02, fail90: 0.36, fail180: 0.57, fail365: 0.79 },
+  electrical_lights: { fail7: 0.02, fail90: 0.33, fail180: 0.55, fail365: 0.76 },
+  paint:             { fail7: 0.00, fail90: 0.06, fail180: 0.12, fail365: 0.23 },
+  classroom_repair:  { fail7: 0.01, fail90: 0.10, fail180: 0.18, fail365: 0.30 },
+  furniture_supply:  { fail7: 0.01, fail90: 0.14, fail180: 0.24, fail365: 0.38 },
+};
+
+const c = await pool.connect();
+try {
+  await c.query("BEGIN");
+  await c.query(`TRUNCATE orgs CASCADE`);
+
+  const orgId = uid();
+  await c.query(`INSERT INTO orgs (id, name) VALUES ($1,$2)`, [orgId, "CJP School Programme"]);
+
+  // users
+  const coordinator = uid();
+  const fieldA = uid(), fieldB = uid();
+  const locals = [uid(), uid(), uid(), uid(), uid(), uid()];
+  const users = [
+    [coordinator, "h_coord", "Anita Verma",   "coordinator", "Rampur", false],
+    [fieldA,      "h_fa",    "Ravi Kumar",    "volunteer",   "Rampur", false],
+    [fieldB,      "h_fb",    "Imran Sheikh",  "volunteer",   "Rampur", false],
+    [locals[0],   "h_l0",    "Sunita Devi",   "volunteer",   "Rampur", true],
+    [locals[1],   "h_l1",    "Meena Yadav",   "volunteer",   "Rampur", true],
+    [locals[2],   "h_l2",    "Rakesh Pal",    "volunteer",   "Rampur", true],
+    [locals[3],   "h_l3",    "Shabana Khatun","volunteer",   "Rampur", true],
+    [locals[4],   "h_l4",    "Dinesh Rawat",  "volunteer",   "Rampur", true],
+    [locals[5],   "h_l5",    "Kamla Singh",   "volunteer",   "Rampur", true],
+  ];
+  for (const [id, ph, name, role, block, local] of users) {
+    await c.query(
+      `INSERT INTO users (id, org_id, phone_hash, phone_last4, name, role, block, is_local_checker)
+       VALUES ($1,$2,$3,$4,$5,$6::user_role,$7,$8)`,
+      [id, orgId, hash(ph), String(1000 + Math.floor(Math.random() * 9000)), name, role, block, local]
+    );
+  }
+
+  // schools
+  const schoolIds = [];
+  for (const [name, village, lat, lng, enrolment] of SCHOOLS) {
+    const id = uid();
+    schoolIds.push(id);
+    await c.query(
+      `INSERT INTO schools (id, org_id, udise_code, name, village, block, district, state, lat, lng, enrolment, is_public)
+       VALUES ($1,$2,$3,$4,$5,'Rampur','Lucknow','Uttar Pradesh',$6,$7,$8,$9)`,
+      [id, orgId, "0901" + Math.floor(Math.random() * 9e5 + 1e5), name, village, lat, lng, enrolment, Math.random() < 0.4]
+    );
+  }
+
+  // photo points
+  const facilities = ["toilet_girls", "drinking_water", "classroom", "electrical", "boundary"];
+  for (const sid of schoolIds) {
+    for (const f of facilities) {
+      if (Math.random() < 0.7) {
+        await c.query(
+          `INSERT INTO photo_points (org_id, school_id, facility_key, landmark_note)
+           VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+          [orgId, sid, f, pick([
+            "Stand at the veranda corner, hand-pump on your left",
+            "From the gate, facing the block, tree in frame on the right",
+            "Back wall of the courtyard, water tank visible above",
+            "Beside the notice board, facing the classroom door",
+          ])]
+        );
+      }
+    }
+  }
+
+  // works, backdated so a full year of checks exists
+  let workCount = 0, checkDone = 0;
+  const workTypes = Object.keys(PROFILE);
+  // the last two schools are deliberately left unaudited: the UI must show a
+  // school nobody has visited as a visible gap, not omit it
+  const auditable = schoolIds.slice(0, -2);
+  for (const sid of auditable) {
+    const n = 2 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < n; i++) {
+      const wt = pick(workTypes);
+      const { rows: [wtRow] } = await c.query(`SELECT facility_key FROM work_types WHERE key=$1`, [wt]);
+      const age = 30 + Math.floor(Math.random() * 400);
+      const cost = (2000 + Math.floor(Math.random() * 40000)) * 100;
+      const wid = uid();
+      await c.query(
+        `INSERT INTO works (id, org_id, school_id, facility_key, work_type_key, description, status,
+                            est_cost_paise, actual_cost_paise, performed_by_id, performed_by_org_id,
+                            done_on, client_uuid)
+         VALUES ($1,$2,$3,$4,$5,$6,'done',$7,$8,$9,$2,$10,$11)`,
+        [wid, orgId, sid, wtRow.facility_key ?? "classroom", wt,
+         null, cost, cost, pick([fieldA, fieldB]), daysAgo(age), uid()]
+      );
+      workCount++;
+
+      // complete the checks that are already due
+      const { rows: ck } = await c.query(
+        `SELECT id, offset_days, due_on FROM checks WHERE work_id=$1 ORDER BY offset_days`, [wid]
+      );
+      for (const k of ck) {
+        const dueAge = (Date.now() - new Date(k.due_on).getTime()) / 864e5;
+        if (dueAge < 0) continue;                 // not due yet
+        if (Math.random() < 0.14) {               // real-world: some checks just never happen
+          await c.query(`UPDATE checks SET state='missed' WHERE id=$1`, [k.id]);
+          continue;
+        }
+        const p = PROFILE[wt][`fail${k.offset_days}`] ?? 0.3;
+        const r = Math.random();
+        const result = r < p * 0.65 ? "failed" : r < p ? "degraded" : "functional";
+        await c.query(
+          `UPDATE checks SET state='done', result=$1::check_result, by_user_id=$2,
+                  completed_at = (due_on + interval '2 days')
+             WHERE id=$3`,
+          [result, pick(locals), k.id]
+        );
+        checkDone++;
+      }
+    }
+  }
+
+  // grants — the four-stage reconciliation. Composite School Grant slabs by
+  // enrolment, with the statutory 10% WASH earmark carried on the row.
+  const slab = (n) => (n <= 100 ? 25000 : n <= 250 ? 50000 : n <= 1000 ? 75000 : 100000);
+  for (let i = 0; i < schoolIds.length; i++) {
+    const sid = schoolIds[i];
+    const enrolment = SCHOOLS[i][4];
+    const sanctioned = slab(enrolment) * 100;
+    // most grants are released in full; a few are short or late
+    const released = Math.random() < 0.15 ? Math.round(sanctioned * 0.5) : sanctioned;
+    // paperwork accounts for some of it; site verification for less again
+    const accounted = Math.round(released * (0.45 + Math.random() * 0.5));
+    const verified = Math.round(accounted * (0.2 + Math.random() * 0.6));
+    await c.query(
+      `INSERT INTO grants (org_id, school_id, ay, head, amount_sanctioned_paise,
+                           amount_released_paise, amount_accounted_paise,
+                           amount_verified_paise, released_on, earmark_share,
+                           earmark_label, source_url)
+       VALUES ($1,$2,'2025-26','composite_school_grant',$3,$4,$5,$6,$7,0.10,
+               'Swachhta / WASH','https://samagrashiksha.example/release-2025-26.pdf')
+       ON CONFLICT DO NOTHING`,
+      [orgId, sid, sanctioned, released, accounted, verified,
+       daysAgo(60 + Math.floor(Math.random() * 120))]
+    );
+  }
+
+  // a handful of untriaged observations for the coordinator inbox
+  for (let i = 0; i < 14; i++) {
+    const sid = pick(auditable);
+    const vid = uid();
+    await c.query(
+      `INSERT INTO visits (id, org_id, school_id, by_user_id, source, occurred_at, client_uuid)
+       VALUES ($1,$2,$3,$4,'app', now() - ($5||' days')::interval, $6)`,
+      [vid, orgId, sid, pick([fieldA, fieldB, ...locals]), Math.floor(Math.random() * 20), uid()]
+    );
+    await c.query(
+      `INSERT INTO observations (org_id, visit_id, school_id, facility_key, state, note_text)
+       VALUES ($1,$2,$3,$4,$5::facility_state,$6)`,
+      [orgId, vid, sid, pick(facilities), pick(["problem", "broken", "broken"]),
+       pick([
+         "Tap is running continuously, washer gone",
+         "Door latch broken, girls not using it",
+         "Two fans not working since the storm",
+         "Handpump handle loose, water muddy",
+         "Ceiling leaking above the back row",
+         null,
+       ])]
+    );
+  }
+
+  await c.query("COMMIT");
+  const { rows: [stat] } = await pool.query(
+    `SELECT (SELECT count(*) FROM schools) schools,
+            (SELECT count(*) FROM works) works,
+            (SELECT count(*) FROM checks) checks,
+            (SELECT count(*) FROM checks WHERE state='done') done,
+            (SELECT count(*) FROM checks WHERE state='pending' AND due_on <= current_date) overdue,
+            (SELECT count(*) FROM observations WHERE triaged_at IS NULL) inbox,
+            (SELECT count(*) FROM grants) grants`
+  );
+  console.log("seeded:", stat);
+  console.log(`works created: ${workCount}, checks completed: ${checkDone}`);
+  console.log("coordinator user id:", coordinator);
+} catch (e) {
+  await c.query("ROLLBACK");
+  throw e;
+} finally {
+  c.release();
+  await pool.end();
+}
