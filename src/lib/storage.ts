@@ -8,7 +8,12 @@ import path from "node:path";
 const ROOT = path.join(process.cwd(), ".data", "media");
 
 export async function putObject(key: string, body: Buffer): Promise<string> {
-  const full = path.join(ROOT, key);
+  const full = path.resolve(ROOT, key);
+  // A key is a storage path, not a filesystem path. Refuse anything that walks
+  // out of ROOT rather than trusting every caller to have sanitised it.
+  if (full !== ROOT && !full.startsWith(ROOT + path.sep)) {
+    throw new Error("invalid storage key");
+  }
   await mkdir(path.dirname(full), { recursive: true });
   await writeFile(full, body);
   return key;

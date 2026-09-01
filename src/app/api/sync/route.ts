@@ -50,9 +50,13 @@ export async function POST(req: Request) {
     // Every insert is ON CONFLICT (org_id, client_uuid) DO NOTHING.
     // Retrying the same payload after a dropped connection is a no-op.
     for (const v of visits) {
+      // school_id arrives from the device: select it back through the org before
+      // writing, so a client cannot file a visit against another org's school.
       await c.query(
         `INSERT INTO visits (org_id, school_id, by_user_id, source, occurred_at, client_uuid)
-         VALUES ($1,$2,$3,'app',$4,$5)
+         SELECT $1::uuid, s.id, $3::uuid, 'app', $4::timestamptz, $5::uuid
+           FROM schools s
+          WHERE s.id = $2::uuid AND s.org_id = $1::uuid
          ON CONFLICT (org_id, client_uuid) DO NOTHING`,
         [user.org_id, v.school_id, user.id, v.occurred_at, v.client_uuid]
       );
@@ -62,9 +66,10 @@ export async function POST(req: Request) {
       await c.query(
         `INSERT INTO observations
            (org_id, visit_id, school_id, facility_key, state, note_text, id)
-         SELECT $1, v.id, $2, $3, $4::facility_state, $5, $6
+         SELECT $1::uuid, v.id, s.id, $3::text, $4::facility_state, $5::text, $6::uuid
            FROM visits v
-          WHERE v.org_id = $1 AND v.client_uuid = $7
+           JOIN schools s ON s.id = $2::uuid AND s.org_id = $1::uuid
+          WHERE v.org_id = $1::uuid AND v.client_uuid = $7::uuid
          ON CONFLICT (id) DO NOTHING`,
         [
           user.org_id,
