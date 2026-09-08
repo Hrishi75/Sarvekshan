@@ -63,7 +63,7 @@ export default async function ChecksPage() {
                       <span className="block truncate font-semibold leading-tight">
                         {r.facility_label}
                       </span>
-                      <span className="block truncate text-xs text-ink-3">
+                      <span className="block truncate text-xs text-mute">
                         {r.school_name}
                       </span>
                     </div>
@@ -72,7 +72,7 @@ export default async function ChecksPage() {
                     </Tag>
                   </div>
                   {r.landmark_note && (
-                    <p className="mt-2 border-l-2 border-rule pl-2 text-xs italic text-ink-2">
+                    <p className="mt-2 border-l-2 border-hair pl-2 text-xs italic text-body">
                       {r.landmark_note}
                     </p>
                   )}

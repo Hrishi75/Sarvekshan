@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { q } from "@/lib/db";
+import { q, q1 } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import { AppShell } from "@/components/AppShell";
+import { DistrictMap, type MapSchool } from "@/components/DistrictMap";
 import { Empty, rupees, relativeDays, scoreColor, scoreBg } from "@/components/ui";
-import { IconSearch, IconChevron } from "@/components/icons";
+import { IconSearch, IconChevron, IconGrid, IconMap } from "@/components/icons";
 
 type Row = {
   id: string;
@@ -13,6 +14,8 @@ type Row = {
   village: string | null;
   block: string | null;
   enrolment: number | null;
+  lat: number | null;
+  lng: number | null;
   score: string | null;
   released: string | null;
   facility_states: string[] | null;
@@ -22,14 +25,15 @@ type Row = {
 export default async function SchoolsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ block?: string; q?: string }>;
+  searchParams: Promise<{ block?: string; q?: string; view?: string }>;
 }) {
   const user = await currentUser();
   if (!user) redirect("/signin");
   const sp = await searchParams;
+  const mapView = sp.view === "map";
 
   const rows = await q<Row>(
-    `SELECT s.id, s.name, s.udise_code, s.village, s.block, s.enrolment,
+    `SELECT s.id, s.name, s.udise_code, s.village, s.block, s.enrolment, s.lat, s.lng,
             sc.score::text,
             (SELECT sum(amount_released_paise)::text FROM grants g
               WHERE g.school_id = s.id)                             AS released,
@@ -48,7 +52,52 @@ export default async function SchoolsPage({
     [user.org_id, sp.block ?? null, sp.q ?? null]
   );
 
-  const total = rows.length;
+  // the unfiltered denominator, so "8 of 12" means something
+  const all = await q1<{ n: string }>(
+    `SELECT count(*)::text AS n FROM schools WHERE org_id = $1`,
+    [user.org_id]
+  );
+  const total = Number(all?.n ?? rows.length);
+  const filtered = Boolean(sp.block || sp.q);
+
+  const href = (view: "table" | "map") => {
+    const p = new URLSearchParams();
+    if (sp.q) p.set("q", sp.q);
+    if (sp.block) p.set("block", sp.block);
+    if (view === "map") p.set("view", "map");
+    const s = p.toString();
+    return `/schools${s ? `?${s}` : ""}`;
+  };
+
+  // clearing the block filter keeps the search term and the current view
+  const clearBlock = (() => {
+    const p = new URLSearchParams();
+    if (sp.q) p.set("q", sp.q);
+    if (mapView) p.set("view", "map");
+    const s = p.toString();
+    return `/schools${s ? `?${s}` : ""}`;
+  })();
+
+  // a school with no score has no site evidence at all — the map draws it hollow
+  const neverAudited = rows.filter((r) => r.score == null).slice(0, 8);
+  const stalest = rows
+    .filter((r) => r.last_audit_days != null)
+    .sort((a, b) => Number(b.last_audit_days) - Number(a.last_audit_days))
+    .slice(0, 5);
+
+  const pins: MapSchool[] = rows
+    .filter((r): r is Row & { lat: number; lng: number } => r.lat != null && r.lng != null)
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      village: r.village,
+      block: r.block,
+      lat: Number(r.lat),
+      lng: Number(r.lng),
+      enrolment: r.enrolment,
+      score: r.score == null ? null : Number(r.score),
+      last_audit_days: r.last_audit_days == null ? null : Number(r.last_audit_days),
+    }));
 
   return (
     <AppShell user={user}>
@@ -60,7 +109,7 @@ export default async function SchoolsPage({
         </p>
 
         <form className="mt-4 flex items-center gap-[10px]" action="/schools">
-          <div className="flex h-[38px] w-full max-w-[480px] items-center gap-[9px] rounded-[8px] border border-hair bg-canvas px-3 focus-within:border-brand">
+          <div className="flex h-[38px] w-full max-w-[420px] items-center gap-[9px] rounded-[8px] border border-hair bg-canvas px-3 focus-within:border-brand">
             <IconSearch size={16} className="text-mute" />
             <input
               name="q"
@@ -70,9 +119,10 @@ export default async function SchoolsPage({
             />
           </div>
           {sp.block && <input type="hidden" name="block" value={sp.block} />}
+          {mapView && <input type="hidden" name="view" value="map" />}
           {sp.block && (
             <Link
-              href="/schools"
+              href={clearBlock}
               className="inline-flex h-[34px] items-center gap-[6px] rounded-[7px] border border-brand-soft bg-brand-soft px-3 text-[13px] font-medium text-brand"
             >
               {sp.block}
@@ -81,24 +131,97 @@ export default async function SchoolsPage({
           )}
           <div className="grow" />
           <span className="num text-[12px] text-mute">
-            {total} {sp.block || sp.q ? `of ${total}` : "schools"}
+            {filtered ? `${rows.length} of ${total}` : `${total} schools`}
           </span>
+
+          {/* table / map — the same set of schools, two ways of reading it */}
+          <div className="flex items-center gap-px rounded-[7px] border border-hair p-[2px]">
+            <Toggle href={href("table")} on={!mapView} icon={<IconGrid size={13} />} label="Table" />
+            <Toggle href={href("map")} on={mapView} icon={<IconMap size={13} />} label="Map" />
+          </div>
         </form>
 
-        <div className="eyebrow flex items-center pb-[9px] pt-[18px]">
-          <span className="min-w-0 grow">School</span>
-          <span className="w-[74px] text-right">Pupils</span>
-          <span className="w-[118px] text-right text-ink">Score ▼</span>
-          <span className="w-[128px] text-center">Facilities</span>
-          <span className="w-[104px] text-right">Grant</span>
-          <span className="w-[104px] text-right">Audited</span>
-          <span className="w-[22px]" />
-        </div>
+        {mapView ? (
+          <div className="h-[18px]" />
+        ) : (
+          <div className="eyebrow flex items-center pb-[9px] pt-[18px]">
+            <span className="min-w-0 grow">School</span>
+            <span className="w-[74px] text-right">Pupils</span>
+            <span className="w-[118px] text-right text-ink">Score ▼</span>
+            <span className="w-[128px] text-center">Facilities</span>
+            <span className="w-[104px] text-right">Grant</span>
+            <span className="w-[104px] text-right">Audited</span>
+            <span className="w-[22px]" />
+          </div>
+        )}
       </div>
 
       {rows.length === 0 ? (
         <div className="p-6">
           <Empty>No schools match that search.</Empty>
+        </div>
+      ) : mapView ? (
+        <div className="grid grid-cols-[minmax(0,1fr)_268px] gap-[14px] p-7">
+          <div className="min-w-0 rounded-[9px] border border-hair bg-surface p-[18px]">
+            <DistrictMap schools={pins} />
+          </div>
+
+          {/* the map shows where the gaps are; this column names them */}
+          <div className="flex min-w-0 flex-col gap-[14px]">
+            <div className="rounded-[9px] border border-hair bg-surface">
+              <div className="flex items-baseline justify-between px-[15px] pb-[9px] pt-[13px]">
+                <span className="text-[13.5px] font-semibold tracking-[-0.01em]">
+                  Never audited
+                </span>
+                <span className="num text-[11px] text-faint">{neverAudited.length}</span>
+              </div>
+              {neverAudited.length === 0 ? (
+                <p className="px-[15px] pb-[13px] text-[12.5px] text-mute">
+                  Every school has been visited at least once.
+                </p>
+              ) : (
+                neverAudited.map((r) => (
+                  <Link
+                    key={r.id}
+                    href={`/schools/${r.id}`}
+                    className="flex items-center gap-[9px] border-t border-hair-soft px-[15px] py-[9px] hover:bg-surface-2"
+                  >
+                    <span className="h-[9px] w-[9px] shrink-0 rounded-full border-[1.5px] border-dashed border-faint" />
+                    <span className="min-w-0 grow truncate text-[12.5px] font-medium">
+                      {r.name}
+                    </span>
+                    <span className="num shrink-0 text-[11px] text-faint">
+                      {r.enrolment ?? "—"}
+                    </span>
+                  </Link>
+                ))
+              )}
+            </div>
+
+            <div className="rounded-[9px] border border-hair bg-surface">
+              <div className="px-[15px] pb-[9px] pt-[13px] text-[13.5px] font-semibold tracking-[-0.01em]">
+                Longest since a visit
+              </div>
+              {stalest.length === 0 ? (
+                <p className="px-[15px] pb-[13px] text-[12.5px] text-mute">No visits on record.</p>
+              ) : (
+                stalest.map((r) => (
+                  <Link
+                    key={r.id}
+                    href={`/schools/${r.id}`}
+                    className="flex items-center gap-[9px] border-t border-hair-soft px-[15px] py-[9px] hover:bg-surface-2"
+                  >
+                    <span className="min-w-0 grow truncate text-[12.5px] font-medium">
+                      {r.name}
+                    </span>
+                    <span className="shrink-0 text-[11.5px] text-mute">
+                      {relativeDays(Number(r.last_audit_days))}
+                    </span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         rows.map((r) => {
@@ -177,5 +300,29 @@ export default async function SchoolsPage({
         })
       )}
     </AppShell>
+  );
+}
+
+function Toggle({
+  href,
+  on,
+  icon,
+  label,
+}: {
+  href: string;
+  on: boolean;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`inline-flex h-[28px] items-center gap-[6px] rounded-[5px] px-[10px] text-[12.5px] ${
+        on ? "bg-brand-soft font-semibold text-brand" : "font-medium text-mute hover:bg-surface-2"
+      }`}
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }

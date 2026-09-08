@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { q, q1 } from "@/lib/db";
 import type { SessionUser } from "@/lib/types";
 import { Sidebar } from "./Sidebar";
-import { IconSearch, IconPlus } from "./icons";
+import { IconPlus } from "./icons";
+import { CommandPalette } from "./CommandPalette";
 
 export async function AppShell({
   user,
@@ -13,13 +14,21 @@ export async function AppShell({
   children: ReactNode;
   actions?: ReactNode;
 }) {
-  const counts = await q1<{ schools: string; findings: string; checks: string }>(
+  const counts = await q1<{
+    schools: string;
+    findings: string;
+    checks: string;
+    inbox: string;
+  }>(
     `SELECT
        (SELECT count(*) FROM schools WHERE org_id=$1)                       AS schools,
        (SELECT count(*) FROM reversions r
           JOIN schools s ON s.id=r.school_id WHERE s.org_id=$1)             AS findings,
        (SELECT count(*) FROM checks
-         WHERE org_id=$1 AND state IN ('pending','sent'))                   AS checks`,
+         WHERE org_id=$1 AND state IN ('pending','sent')
+           AND due_on <= current_date + 14)                                 AS checks,
+       (SELECT count(*) FROM observations
+         WHERE org_id=$1 AND triaged_at IS NULL AND state <> 'working')     AS inbox`,
     [user.org_id]
   );
 
@@ -39,6 +48,7 @@ export async function AppShell({
           schools: Number(counts?.schools ?? 0),
           findings: Number(counts?.findings ?? 0),
           checks: Number(counts?.checks ?? 0),
+          inbox: Number(counts?.inbox ?? 0),
         }}
         blocks={blocks.map((b) => ({
           block: b.block,
@@ -49,13 +59,7 @@ export async function AppShell({
 
       <div className="flex min-w-0 grow flex-col">
         <header className="flex h-[56px] shrink-0 items-center gap-[14px] border-b border-hair bg-surface px-6">
-          <div className="flex h-[34px] w-full max-w-[420px] items-center gap-[9px] rounded-[7px] border border-hair bg-canvas px-[11px]">
-            <IconSearch size={15} className="text-faint" />
-            <span className="text-[13px] text-faint">Search schools, UDISE codes, findings</span>
-            <span className="ml-auto rounded-[4px] border border-hair px-[5px] font-mono text-[10.5px] text-faint">
-              /
-            </span>
-          </div>
+          <CommandPalette />
           <div className="grow" />
           {actions ?? (
             <a

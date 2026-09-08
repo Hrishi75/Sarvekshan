@@ -3,7 +3,7 @@ import { currentUser } from "@/lib/session";
 import { survivalByWorkType } from "@/lib/survival";
 import { AppShell } from "@/components/AppShell";
 import { SurvivalChart } from "@/components/SurvivalChart";
-import { Card, Empty, rupees } from "@/components/ui";
+import { Card, Empty, rupees, ExportLink } from "@/components/ui";
 
 export default async function SurvivalPage() {
   const user = await currentUser();
@@ -14,12 +14,17 @@ export default async function SurvivalPage() {
   return (
     <AppShell user={user}>
       <div className="border-b border-hair bg-surface px-7 pb-5 pt-[22px]">
-        <h1 className="mb-[3px] text-[24px] font-semibold tracking-[-0.025em]">
-          What survives after we leave
-        </h1>
-        <p className="text-[13.5px] text-mute">
-          Share of completed work still functional at each checkpoint, by work type.
-        </p>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h1 className="mb-[3px] text-[24px] font-semibold tracking-[-0.025em]">
+              What survives after we leave
+            </h1>
+            <p className="text-[13.5px] text-mute">
+              Share of completed work still functional at each checkpoint, by work type.
+            </p>
+          </div>
+          <ExportLink dataset="survival" />
+        </div>
       </div>
 
       <div className="p-7">

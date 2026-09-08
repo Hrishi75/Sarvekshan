@@ -68,3 +68,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* FieldShell tap target. Anything a thumb has to hit outdoors, one-handed, is at
+   least this tall. Field capture is the one place where size rather than weight
+   carries the hierarchy — see the two-shell note in CLAUDE.md. */
+.tap { min-height: 52px; }
+
+/* Map pin drop-in. The district map animates pins in once on load so the eye
+   follows the coverage gaps; reduced-motion already kills this globally. */
+@keyframes pin-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { q } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import { AppShell } from "@/components/AppShell";
-import { Card, Empty, rupees } from "@/components/ui";
+import { Card, Empty, rupees, ExportLink } from "@/components/ui";
 
 type Row = {
   school_id: string; school_name: string; ay: string;
@@ -41,10 +41,15 @@ export default async function GrantsPage() {
   return (
     <AppShell user={user}>
       <div className="border-b border-hair bg-surface px-7 pb-5 pt-[22px]">
-        <h1 className="mb-[3px] text-[24px] font-semibold tracking-[-0.025em]">Grants</h1>
-        <p className="text-[13.5px] text-mute">
-          Sanctioned, released, accounted for on paper, and actually seen on the ground.
-        </p>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h1 className="mb-[3px] text-[24px] font-semibold tracking-[-0.025em]">Grants</h1>
+            <p className="text-[13.5px] text-mute">
+              Sanctioned, released, accounted for on paper, and actually seen on the ground.
+            </p>
+          </div>
+          <ExportLink dataset="grants" />
+        </div>
       </div>
 
       <div className="p-7">
