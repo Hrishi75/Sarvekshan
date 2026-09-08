@@ -73,10 +73,13 @@ export default async function Overview() {
               completed
             </p>
           </div>
-          <button className="inline-flex h-[31px] items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body">
+          <a
+            href="/api/export?dataset=schools"
+            className="inline-flex h-[31px] items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body hover:border-faint"
+          >
             <IconExport size={13} />
-            Export
-          </button>
+            Export CSV
+          </a>
         </div>
 
         {/* stat row */}

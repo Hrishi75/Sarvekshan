@@ -1,16 +1,21 @@
 import type { ReactNode } from "react";
+import { IconExport } from "./icons";
 
 export function Card({
   children,
   className = "",
   pad = true,
+  id,
 }: {
   children: ReactNode;
   className?: string;
   pad?: boolean;
+  /** set when the card is a jump target for an in-page tab */
+  id?: string;
 }) {
   return (
     <div
+      id={id}
       className={`rounded-[9px] border border-hair bg-surface ${pad ? "p-[17px]" : ""} ${className}`}
     >
       {children}
@@ -88,6 +93,20 @@ export function scoreBg(score: number | null): string {
   if (score >= 70) return "bg-good";
   if (score >= 50) return "bg-warn";
   return "bg-bad";
+}
+
+/** Download link for a page's own dataset — same numbers, same views. */
+export function ExportLink({ dataset, id }: { dataset: string; id?: string }) {
+  const href = `/api/export?dataset=${dataset}${id ? `&id=${id}` : ""}`;
+  return (
+    <a
+      href={href}
+      className="inline-flex h-[31px] shrink-0 items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body hover:border-faint"
+    >
+      <IconExport size={13} />
+      Export CSV
+    </a>
+  );
 }
 
 export { rupees, relativeDays } from "@/lib/format";

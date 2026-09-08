@@ -10,7 +10,7 @@ const RESULTS: { key: Result; label: string; hi: string; tone: string }[] = [
   { key: "functional", label: "Still working", hi: "अभी भी ठीक", tone: "bg-good text-white" },
   { key: "degraded", label: "Partly working", hi: "आधा ठीक", tone: "bg-warn text-white" },
   { key: "failed", label: "Broken again", hi: "फिर खराब", tone: "bg-bad text-white" },
-  { key: "inaccessible", label: "Could not see it", hi: "देख नहीं सका", tone: "bg-surface-2 text-ink-2 border border-rule" },
+  { key: "inaccessible", label: "Could not see it", hi: "देख नहीं सका", tone: "bg-surface-2 text-body border border-hair" },
 ];
 
 export function CheckForm({ checkId }: { checkId: string }) {
@@ -64,7 +64,7 @@ export function CheckForm({ checkId }: { checkId: string }) {
     return (
       <div className="rounded border border-good/30 bg-good-soft px-4 py-6 text-center">
         <p className="text-lg font-semibold text-good">Saved on this phone</p>
-        <p className="mt-1 text-sm text-ink-2">It uploads by itself when there is signal.</p>
+        <p className="mt-1 text-sm text-body">It uploads by itself when there is signal.</p>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export function CheckForm({ checkId }: { checkId: string }) {
             key={r.key}
             onClick={() => setResult(r.key)}
             className={`flex min-h-14 items-center justify-between rounded px-5 text-left font-semibold ${
-              result === r.key ? r.tone : "border border-rule bg-surface text-ink"
+              result === r.key ? r.tone : "border border-hair bg-surface text-ink"
             }`}
           >
             <span>{r.label}</span>
@@ -86,7 +86,7 @@ export function CheckForm({ checkId }: { checkId: string }) {
         ))}
       </div>
 
-      <label className="tap flex cursor-pointer items-center justify-center rounded border-2 border-dashed border-rule-strong bg-surface font-semibold text-accent">
+      <label className="tap flex cursor-pointer items-center justify-center rounded border-2 border-dashed border-brand/30 bg-surface font-semibold text-brand">
         {photo ? "Photo taken — retake" : "Take photo from the same spot"}
         <input
           type="file"
@@ -105,13 +105,13 @@ export function CheckForm({ checkId }: { checkId: string }) {
         onChange={(e) => setNote(e.target.value)}
         rows={2}
         placeholder="Anything to add (optional)"
-        className="w-full rounded border border-rule bg-surface px-3 py-2 text-sm"
+        className="w-full rounded border border-hair bg-surface px-3 py-2 text-sm"
       />
 
       <button
         onClick={save}
         disabled={!result || saving}
-        className="tap rounded bg-accent px-4 text-lg font-semibold text-white disabled:opacity-40"
+        className="tap rounded bg-brand px-4 text-lg font-semibold text-white disabled:opacity-40"
       >
         {saving ? "Saving…" : "Save check"}
       </button>

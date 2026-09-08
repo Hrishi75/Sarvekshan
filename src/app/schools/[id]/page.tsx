@@ -96,7 +96,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
   return (
     <AppShell user={user}>
       {/* entity header */}
-      <div className="border-b border-hair bg-surface px-7 pt-4">
+      <div id="overview" className="scroll-mt-4 border-b border-hair bg-surface px-7 pt-4">
         <nav className="mb-[10px] flex items-center gap-[6px] text-[12.5px] text-mute">
           <Link href="/schools" className="hover:text-ink">Schools</Link>
           <IconChevron size={13} className="text-faint" />
@@ -137,10 +137,13 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
             </div>
             <span className="h-[42px] w-px bg-hair" />
             <div className="flex gap-2">
-              <button className="inline-flex h-[33px] items-center gap-[6px] rounded-[7px] border border-hair px-3 text-[13px] font-medium text-body">
+              <a
+                href={`/api/export?dataset=school&id=${school.id}`}
+                className="inline-flex h-[33px] items-center gap-[6px] rounded-[7px] border border-hair px-3 text-[13px] font-medium text-body hover:border-faint"
+              >
                 <IconExport size={14} />
                 Report
-              </button>
+              </a>
               <Link href="/visit" className="inline-flex h-[33px] items-center gap-[6px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white">
                 <IconCamera size={14} />
                 New audit
@@ -150,15 +153,24 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
         </div>
 
         <div className="mt-[18px] flex gap-[22px]">
-          {["Overview", "Grants", "Evidence", "Follow-ups", "History"].map((t, i) => (
-            <span
-              key={t}
+          {[
+            { label: "Overview", href: "#overview" },
+            { label: "Grants", href: "#grants" },
+            { label: "Facilities", href: "#facilities" },
+            { label: "Score", href: "#score" },
+            { label: "Evidence", href: "#evidence" },
+          ].map((t, i) => (
+            <a
+              key={t.href}
+              href={t.href}
               className={`pb-[11px] text-[13.5px] ${
-                i === 0 ? "font-semibold text-ink shadow-[inset_0_-2px_0_0_var(--color-brand)]" : "font-medium text-mute"
+                i === 0
+                  ? "font-semibold text-ink shadow-[inset_0_-2px_0_0_var(--color-brand)]"
+                  : "font-medium text-mute hover:text-ink"
               }`}
             >
-              {t}
-            </span>
+              {t.label}
+            </a>
           ))}
         </div>
       </div>
@@ -169,7 +181,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
 
           {/* grant reconciliation */}
           {grant ? (
-            <Card className="!p-[17px_19px]">
+            <Card className="scroll-mt-4 !p-[17px_19px]" id="grants">
               <div className="mb-[15px] flex items-center justify-between">
                 <span className="text-[14.5px] font-semibold tracking-[-0.01em]">
                   Composite School Grant — {grant.ay}
@@ -205,7 +217,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
           )}
 
           {/* facilities */}
-          <Card pad={false} className="overflow-hidden">
+          <Card pad={false} className="scroll-mt-4 overflow-hidden" id="facilities">
             <div className="px-[19px] pb-3 pt-4 text-[14.5px] font-semibold tracking-[-0.01em]">
               Facilities
             </div>
@@ -236,7 +248,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
           </Card>
 
           {/* how the score was reached — the working, shown */}
-          <Card className="!p-[17px_19px]">
+          <Card className="scroll-mt-4 !p-[17px_19px]" id="score">
             <div className="mb-3 text-[14.5px] font-semibold tracking-[-0.01em]">How this score was reached</div>
             <div className="flex flex-col gap-[9px]">
               <Component label="Facilities working" weight="55%" value={school.facility_component} />
@@ -253,7 +265,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
 
         {/* evidence column */}
         <div className="flex min-w-0 flex-col gap-[14px]">
-          <Card pad={false} className="overflow-hidden">
+          <Card pad={false} className="scroll-mt-4 overflow-hidden" id="evidence">
             <div className="flex items-center justify-between px-[18px] pb-3 pt-4">
               <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Same spot, over time</span>
               <span className="num text-[11px] text-mute">{facilities[0]?.label ?? "—"}</span>

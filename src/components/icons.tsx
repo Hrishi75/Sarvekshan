@@ -71,3 +71,8 @@ export const IconImage = ({ size = 16, className }: P) => (
     <path d="m4 17 5-5 4.5 4.5L17 13l3 3" />
   </svg>
 );
+export const IconMap = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="m9 4 6 2.5 5-2v13l-5 2-6-2.5-5 2v-13z" /><path d="M9 4v13" /><path d="M15 6.5v13" />
+  </svg>
+);

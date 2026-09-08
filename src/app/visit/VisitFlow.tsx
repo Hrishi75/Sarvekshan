@@ -183,7 +183,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
         </div>
         <div>
           <h2 className="text-xl font-semibold">Saved on this phone</h2>
-          <p className="mt-1 text-sm text-ink-2">
+          <p className="mt-1 text-sm text-body">
             It will upload by itself when there is signal. You can close the app.
           </p>
         </div>
@@ -197,13 +197,13 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
               setNote("");
               setStep("facility");
             }}
-            className="tap rounded bg-accent px-4 font-semibold text-white"
+            className="tap rounded bg-brand px-4 font-semibold text-white"
           >
             Report another thing here
           </button>
           <button
             onClick={() => router.push("/")}
-            className="tap rounded border border-rule bg-surface px-4 font-medium text-ink-2"
+            className="tap rounded border border-hair bg-surface px-4 font-medium text-body"
           >
             Done for now
           </button>
@@ -220,9 +220,9 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
         <section>
           <StepTitle n={1} title="Which school?" hint={located ? "Nearest first" : "Your block"} />
           {loadingSchools ? (
-            <p className="py-8 text-center text-sm text-ink-3">Finding you…</p>
+            <p className="py-8 text-center text-sm text-mute">Finding you…</p>
           ) : schools.length === 0 ? (
-            <p className="rounded border border-dashed border-rule-strong px-4 py-8 text-center text-sm text-ink-3">
+            <p className="rounded border border-dashed border-brand/30 px-4 py-8 text-center text-sm text-mute">
               No schools available offline yet. Open this once with signal.
             </p>
           ) : (
@@ -234,14 +234,14 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
                       setSchool(s);
                       setStep("facility");
                     }}
-                    className="tap flex w-full items-center justify-between gap-3 rounded border border-rule bg-surface px-4 text-left hover:border-accent"
+                    className="tap flex w-full items-center justify-between gap-3 rounded border border-hair bg-surface px-4 text-left hover:border-brand"
                   >
                     <span>
                       <span className="block font-semibold leading-tight">{s.name}</span>
-                      <span className="block text-xs text-ink-3">{s.village ?? s.block}</span>
+                      <span className="block text-xs text-mute">{s.village ?? s.block}</span>
                     </span>
                     {s.distance_m != null && (
-                      <span className="shrink-0 font-mono text-xs text-ink-3">
+                      <span className="shrink-0 font-mono text-xs text-mute">
                         {formatDistance(Number(s.distance_m))}
                       </span>
                     )}
@@ -264,10 +264,10 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
                   setFacility(f);
                   setStep("state");
                 }}
-                className="flex min-h-24 flex-col items-center justify-center gap-1 rounded border border-rule bg-surface px-2 py-3 text-center hover:border-accent"
+                className="flex min-h-24 flex-col items-center justify-center gap-1 rounded border border-hair bg-surface px-2 py-3 text-center hover:border-brand"
               >
                 <span className="text-sm font-semibold leading-tight">{f.label_en}</span>
-                <span className="text-xs text-ink-3">{f.label_hi}</span>
+                <span className="text-xs text-mute">{f.label_hi}</span>
               </button>
             ))}
           </div>
@@ -303,7 +303,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
             hint="Both optional — but the voice note is the useful one"
           />
 
-          <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-rule-strong bg-surface font-semibold text-accent">
+          <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-brand/30 bg-surface font-semibold text-brand">
             {photo ? "Retake photo" : "Take photo"}
             <input
               type="file"
@@ -319,7 +319,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
             <img
               src={photoUrl}
               alt="What you just photographed"
-              className="max-h-64 w-full rounded border border-rule object-cover"
+              className="max-h-64 w-full rounded border border-hair object-cover"
             />
           )}
 
@@ -330,7 +330,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
                 ? "border-bad bg-bad text-white"
                 : voice
                   ? "border-good bg-good-soft text-good"
-                  : "border-dashed border-rule-strong bg-surface text-accent"
+                  : "border-dashed border-brand/30 bg-surface text-brand"
             }`}
           >
             {recording ? "◼ Stop recording" : voice ? "✓ Voice note saved — record again" : "🎤 Hold a voice note"}
@@ -341,13 +341,13 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             placeholder="Type only if you want to (optional)"
-            className="w-full rounded border border-rule bg-surface px-3 py-2 text-sm"
+            className="w-full rounded border border-hair bg-surface px-3 py-2 text-sm"
           />
 
           <button
             onClick={save}
             disabled={saving}
-            className="tap rounded bg-accent px-4 text-lg font-semibold text-white disabled:opacity-50"
+            className="tap rounded bg-brand px-4 text-lg font-semibold text-white disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -360,11 +360,11 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
 function StepTitle({ n, title, hint }: { n: number; title: string; hint?: string | null }) {
   return (
     <div className="mb-3">
-      <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-ink-3">
+      <span className="font-mono text-[0.62rem] uppercase tracking-[0.16em] text-mute">
         Step {n} of 4
       </span>
       <h2 className="text-xl font-semibold leading-tight">{title}</h2>
-      {hint && <p className="text-sm text-ink-3">{hint}</p>}
+      {hint && <p className="text-sm text-mute">{hint}</p>}
     </div>
   );
 }
@@ -377,7 +377,7 @@ function Progress({ step }: { step: Step }) {
       {order.map((s, idx) => (
         <span
           key={s}
-          className={`h-1 flex-1 rounded-full ${idx <= i ? "bg-accent" : "bg-rule"}`}
+          className={`h-1 flex-1 rounded-full ${idx <= i ? "bg-brand" : "bg-hair"}`}
         />
       ))}
     </div>

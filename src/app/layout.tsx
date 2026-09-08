@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   title: "Sarvekshan",
   description: "School audit — what the records claim, and what the building looks like",
   manifest: "/manifest.webmanifest",
+  // without this the browser falls back to requesting /favicon.ico, which this
+  // app does not have — the icon has been an SVG since the design system landed
+  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = {
