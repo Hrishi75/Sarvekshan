@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { readFileSync } from "node:fs";
 import crypto from "node:crypto";
+import { hashPassword, hashPhone } from "@/lib/password";
 
 const env = Object.fromEntries(
   readFileSync(new URL("../.env.local", import.meta.url), "utf8")
@@ -8,7 +9,6 @@ const env = Object.fromEntries(
 );
 const pool = new Pool({ connectionString: env.DATABASE_URL });
 const uid = () => crypto.randomUUID();
-const hash = (p) => crypto.createHash("sha256").update(p).digest("hex");
 const daysAgo = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -51,22 +51,37 @@ try {
   const coordinator = uid();
   const fieldA = uid(), fieldB = uid();
   const locals = [uid(), uid(), uid(), uid(), uid(), uid()];
+  // Real ten-digit numbers, because the number is now the sign-in identifier.
+  // A block that belongs to nobody: a seeded demo must not put a real person's
+  // phone into a database.
   const users = [
-    [coordinator, "h_coord", "Anita Verma",   "coordinator", "Rampur", false],
-    [fieldA,      "h_fa",    "Ravi Kumar",    "volunteer",   "Rampur", false],
-    [fieldB,      "h_fb",    "Imran Sheikh",  "volunteer",   "Rampur", false],
-    [locals[0],   "h_l0",    "Sunita Devi",   "volunteer",   "Rampur", true],
-    [locals[1],   "h_l1",    "Meena Yadav",   "volunteer",   "Rampur", true],
-    [locals[2],   "h_l2",    "Rakesh Pal",    "volunteer",   "Rampur", true],
-    [locals[3],   "h_l3",    "Shabana Khatun","volunteer",   "Rampur", true],
-    [locals[4],   "h_l4",    "Dinesh Rawat",  "volunteer",   "Rampur", true],
-    [locals[5],   "h_l5",    "Kamla Singh",   "volunteer",   "Rampur", true],
+    [coordinator, "9900000001", "Anita Verma",   "coordinator", "Rampur", false],
+    [fieldA,      "9900000002", "Ravi Kumar",    "volunteer",   "Rampur", false],
+    [fieldB,      "9900000003", "Imran Sheikh",  "volunteer",   "Rampur", false],
+    [locals[0],   "9900000004", "Sunita Devi",   "volunteer",   "Rampur", true],
+    [locals[1],   "9900000005", "Meena Yadav",   "volunteer",   "Rampur", true],
+    [locals[2],   "9900000006", "Rakesh Pal",    "volunteer",   "Rampur", true],
+    [locals[3],   "9900000007", "Shabana Khatun","volunteer",   "Rampur", true],
+    [locals[4],   "9900000008", "Dinesh Rawat",  "volunteer",   "Rampur", true],
+    [locals[5],   "9900000009", "Kamla Singh",   "volunteer",   "Rampur", true],
   ];
-  for (const [id, ph, name, role, block, local] of users) {
+
+  // One password across the demo roster, printed at the end of the run. It is
+  // deliberately not must_change_password: these are shared demo logins, and a
+  // forced change would mean the first person in locks everybody else out of
+  // the account. Real people get a temp password from `npm run user`, which
+  // does force it. SEED_FORCE_PASSWORD_CHANGE=1 rehearses that path.
+  const seedPassword = process.env.SEED_PASSWORD || "sarvekshan-demo";
+  const forceChange = process.env.SEED_FORCE_PASSWORD_CHANGE === "1";
+  const seedPasswordHash = await hashPassword(seedPassword);
+
+  for (const [id, phone, name, role, block, local] of users) {
     await c.query(
-      `INSERT INTO users (id, org_id, phone_hash, phone_last4, name, role, block, is_local_checker)
-       VALUES ($1,$2,$3,$4,$5,$6::user_role,$7,$8)`,
-      [id, orgId, hash(ph), String(1000 + Math.floor(Math.random() * 9000)), name, role, block, local]
+      `INSERT INTO users (id, org_id, phone_hash, phone_last4, name, role, block, is_local_checker,
+                          password_hash, password_set_at, must_change_password)
+       VALUES ($1,$2,$3,$4,$5,$6::user_role,$7,$8,$9,now(),$10)`,
+      [id, orgId, hashPhone(phone), phone.slice(-4), name, role, block, local,
+       seedPasswordHash, forceChange]
     );
   }
 
@@ -211,7 +226,17 @@ try {
   );
   console.log("seeded:", stat);
   console.log(`works created: ${workCount}, checks completed: ${checkDone}`);
-  console.log("coordinator user id:", coordinator);
+
+  const rule = "\u2500".repeat(60);
+  console.log(`\n${rule}\n  SIGN IN AT /signin\n${rule}`);
+  console.log(`  password, all of them:  ${seedPassword}\n`);
+  for (const [, phone, name, role, , local] of users) {
+    console.log(`  ${phone}   ${name.padEnd(16)}${role}${local ? "  \u00b7 local checker" : ""}`);
+  }
+  console.log(rule);
+  console.log("  Shared demo logins. For a real deployment give each person their");
+  console.log("  own:  npm run user add -- --phone 9876543210 --name \"...\"");
+  console.log(`${rule}\n`);
 } catch (e) {
   await c.query("ROLLBACK");
   throw e;

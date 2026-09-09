@@ -20,6 +20,13 @@ Operations tool for village school repair work. See README.md for how to run it.
   like this collapse.
 - **Nothing about identifiable children.** No names, marks, or attendance. It brings
   DPDP parental-consent obligations the project does not need and cannot meet.
+- **The session cookie is signed and carries a password version.** Never put a bare
+  id in it — that is a cookie any client can write. `password_set_at` is the version,
+  so a password change signs out the devices that were signed in before it; a new
+  session-issuing path that skips it silently keeps a stolen handset logged in.
+- **A generated password is temporary.** It lands with `must_change_password`, and
+  `src/proxy.ts` holds that session on `/password`. Anything that mints a credential
+  and leaves that flag clear is handing out a permanent password by accident.
 - **A score requires site evidence, never paperwork alone.** `school_scores` returns
   NULL when no facility has been observed — a school nobody has visited renders as a
   visible gap rather than being handed a number derived from a grant PDF.

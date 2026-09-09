@@ -14,7 +14,7 @@ export default async function VisitPage() {
   );
 
   return (
-    <FieldShell title="Report something" subtitle="Takes under a minute" back="/">
+    <FieldShell title="Report something" subtitle="Takes under a minute" back="/" user={user}>
       <VisitFlow facilities={facilities} />
     </FieldShell>
   );

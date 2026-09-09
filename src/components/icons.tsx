@@ -76,3 +76,15 @@ export const IconMap = ({ size = 16, className }: P) => (
     <path d="m9 4 6 2.5 5-2v13l-5 2-6-2.5-5 2v-13z" /><path d="M9 4v13" /><path d="M15 6.5v13" />
   </svg>
 );
+export const IconSignOut = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9" />
+    <path d="M16 16.5 20.5 12 16 7.5" /><path d="M20.5 12H9" />
+  </svg>
+);
+export const IconLock = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <rect x="4" y="10" width="16" height="10.5" rx="2" />
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+  </svg>
+);

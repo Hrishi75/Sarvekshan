@@ -10,6 +10,7 @@ import {
   IconCamera,
   IconGrant,
   IconCheckList,
+  IconSignOut,
 } from "./icons";
 
 type Nav = { href: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
@@ -147,14 +148,31 @@ export function Sidebar({
       )}
 
       <div className="grow" />
-      <div className="sticky bottom-0 flex items-center gap-[9px] border-t border-hair-soft bg-surface px-4 py-3">
-        <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-semibold text-white">
-          {initials}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate text-[12.5px] font-medium">{user.name}</span>
-          <span className="block text-[11px] capitalize text-faint">{user.role}</span>
-        </span>
+      <div className="sticky bottom-0 flex items-center gap-[6px] border-t border-hair-soft bg-surface px-[10px] py-[10px]">
+        <Link
+          href="/password"
+          title="Change password"
+          className="flex min-w-0 grow items-center gap-[9px] rounded-[6px] px-[6px] py-[3px] hover:bg-surface-2"
+        >
+          <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-ink text-[11px] font-semibold text-white">
+            {initials}
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-[12.5px] font-medium">{user.name}</span>
+            <span className="block text-[11px] capitalize text-faint">{user.role}</span>
+          </span>
+        </Link>
+        {/* A real form, not a link: a GET sign-out gets fired by prefetchers. */}
+        <form action="/api/signout" method="post" className="shrink-0">
+          <button
+            type="submit"
+            title="Sign out"
+            aria-label="Sign out"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-[6px] text-faint hover:bg-surface-2 hover:text-body"
+          >
+            <IconSignOut size={15} />
+          </button>
+        </form>
       </div>
     </aside>
   );

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "db:migrate": "for f in db/migrations/*.sql; do echo \"-- $f\"; psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -q -f \"$f\"; done",
     "db:reset": "dropdb --if-exists field_register && createdb field_register && npm run db:migrate && npm run seed",
-    "seed": "node scripts/seed.mjs"
+    "seed": "tsx scripts/seed.mjs",
+    "user": "tsx scripts/user.mts"
   },
   "dependencies": {
     "dexie": "^4.4.5",

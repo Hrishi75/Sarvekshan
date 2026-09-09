@@ -49,6 +49,7 @@ export default async function ChecksPage() {
       title="Follow-up checks"
       subtitle={mine ? "Assigned to you" : "Across the block"}
       back="/"
+      user={user}
     >
       {rows.length === 0 ? (
         <Empty>Nothing due in the next two weeks.</Empty>
