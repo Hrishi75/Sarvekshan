@@ -24,6 +24,40 @@ available (both ship with a standard Postgres install). Point `DATABASE_URL` in
 `npm run seed` prints the phone numbers and the one shared password for the demo
 roster. Sign in at `/signin` with any of them.
 
+## The public board
+
+`/` is public. Signed out, it is the whole register in the open — which school is in
+what condition, the facilities somebody actually saw on site, when they last saw
+them, and how many past repairs have already broken again. **Sign in** is a button in
+the top right, and the same URL renders the desk dashboard once you are signed in.
+
+**Everything in the register is on it**, in seven sections: the district totals, a
+facility-by-facility breakdown of what is broken and where, the map, the survival
+curves and cost per lasting outcome, the grant reconciliation from sanctioned down
+to verified-on-site, the findings the team is chasing, and then every school with a
+search box over it. There is no publication gate: a school left off a transparency
+page is exactly the school a reader would most want to see. `schools.is_public`
+still exists in the schema and is deliberately unread — put the filter back in
+`PublicBoard.tsx` if this deployment ever needs per-school opt-in.
+
+Two things are held back, and only two: **names and photographs**. Nothing on the
+page identifies a child, a teacher, or a field worker, and the record of who
+reported what stays inside the register. The money is not held back — "released but
+not yet verified on site" is published as a gap in the team's own checking, next to
+its own overdue follow-ups, because publishing a school's failures while hiding the
+surveyor's would not be transparency.
+
+The page has no session, so it has no org to scope to: `survivalByWorkType(null)`
+and `findingsFor(null)` mean *every org in the register*. Every signed-in caller
+still passes its own org id and is unaffected.
+
+Absent evidence stays absent. A school nobody has visited has no score and reads
+"not visited yet"; a facility never observed anywhere draws no bar at all; a missed
+check is dropped from the denominator rather than counted as a pass.
+
+Everything else — `/schools`, `/findings`, `/api/export` — is unchanged and still
+requires a session.
+
 ## Signing in
 
 The identifier is the **phone number** — what a field worker already knows, and what
@@ -186,6 +220,7 @@ db/migrations/     schema and the follow-up engine
 scripts/seed.mjs   demo data with a realistic survival profile
 scripts/user.mts   accounts and credentials — the only way in for a real person
 src/proxy.ts       holds a temporary-password session on /password
+src/app/PublicBoard.tsx  the signed-out landing page: school conditions, opt-in per school
 src/lib/           db, session, passwords, offline queue, survival maths, storage
 src/app/visit/     the sixty-second capture flow — the screen it all depends on
 src/app/checks/    follow-up checks, and completing one

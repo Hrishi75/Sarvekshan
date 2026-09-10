@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { q, q1 } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import { survivalByWorkType } from "@/lib/survival";
@@ -9,10 +8,25 @@ import { SurvivalChart } from "@/components/SurvivalChart";
 import { Card, Tag, rupees } from "@/components/ui";
 import { IconExport, IconUp, IconDown } from "@/components/icons";
 import { NextActions } from "@/components/NextActions";
+import { PublicBoard } from "./PublicBoard";
 
-export default async function Overview() {
+export default async function Overview({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; block?: string }>;
+}) {
   const user = await currentUser();
-  if (!user) redirect("/signin");
+  // Signed out is not a dead end. The register has a public half — which school
+  // is in what condition — and this is where it lives; sign-in is a button on it.
+  if (!user) {
+    const sp = await searchParams;
+    return (
+      <PublicBoard
+        search={sp.q?.trim().slice(0, 200) || ""}
+        block={sp.block?.trim().slice(0, 150) || ""}
+      />
+    );
+  }
 
   const stats = await q1<{
     schools: string;

@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { q } from "@/lib/db";
 import { Card, Tag } from "@/components/ui";
-import { IconSchool } from "@/components/icons";
+import { IconChevron, IconSchool } from "@/components/icons";
 import { devSignInEnabled } from "@/lib/session";
 import { SignInForm } from "./SignInForm";
 
@@ -44,6 +45,15 @@ export default async function SignIn({
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center px-4 py-10">
+      {/* the public board is the landing page; this is the way back to it */}
+      <Link
+        href="/"
+        className="mb-4 inline-flex min-h-10 items-center gap-[6px] self-start text-[12.5px] font-medium text-mute hover:text-ink"
+      >
+        <IconChevron size={13} className="rotate-180" />
+        School conditions
+      </Link>
+
       <div className="mb-[22px] flex flex-col items-center gap-[10px] text-center">
         <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brand text-white">
           <IconSchool size={22} />
