@@ -50,13 +50,14 @@ export default async function RepairsPage({ searchParams }: {
   );
 
   return <AppShell user={user}>
-    <div className="mx-auto max-w-[1400px] p-4 sm:p-6">
+    <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-7">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-[24px] font-semibold tracking-[-0.025em]">Repairs</h1>
+          <p className="page-kicker">Repair pipeline</p>
+          <h1 className="text-[28px] font-semibold tracking-[-0.035em]">Repairs</h1>
           <p className="mt-1 text-[13.5px] text-mute">From a reported problem to a repair that lasts.</p>
         </div>
-        {user.role !== "volunteer" && <Link href="/inbox" className="inline-flex min-h-11 items-center rounded-[7px] bg-brand px-4 text-[13px] font-semibold text-white">Review new reports →</Link>}
+        {user.role !== "volunteer" && <Link href="/inbox" className="inline-flex min-h-11 items-center rounded-[8px] bg-brand px-4 text-[13px] font-semibold text-white hover:opacity-90">Review new reports →</Link>}
       </div>
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
@@ -64,25 +65,25 @@ export default async function RepairsPage({ searchParams }: {
           { label: "Past target date", value: counts.overdue, hint: "need a progress update", tone: Number(counts.overdue) ? "text-bad" : "text-ink" },
           { label: "Without an owner", value: counts.unassigned, hint: "waiting to be assigned", tone: Number(counts.unassigned) ? "text-warn" : "text-ink" },
           { label: "Completed", value: counts.done, hint: "follow-up history on each repair", tone: "text-ink" },
-        ].map((stat) => <Card key={stat.label}>
+        ].map((stat) => <Card key={stat.label} className="relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-brand">
           <p className="text-[12px] font-medium text-mute">{stat.label}</p>
           <p className={`num mt-2 text-[27px] font-semibold ${stat.tone}`}>{stat.value}</p>
           <p className="mt-2 text-[12px] text-mute">{stat.hint}</p>
         </Card>)}
       </div>
       <Card pad={false} className="overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hair px-4 py-3">
-          <nav aria-label="Filter repairs" className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-hair bg-surface-2/60 px-4 py-3">
+          <nav aria-label="Filter repairs" className="flex flex-wrap gap-1 rounded-[8px] border border-hair bg-surface p-[2px]">
             {FILTERS.map(([key, label]) => <Link key={key} href={`/repairs?${new URLSearchParams({ status: key, ...(search ? { q: search } : {}) })}`} aria-current={status === key ? "page" : undefined}
               className={`inline-flex min-h-10 items-center rounded-[6px] px-3 text-[12.5px] ${status === key ? "bg-brand-soft font-semibold text-brand" : "text-body hover:bg-surface-2"}`}>{label}</Link>)}
           </nav>
           <form action="/repairs" className="flex w-full items-center gap-2 sm:w-auto">
             <input type="hidden" name="status" value={status} />
-            <div className="flex min-h-10 min-w-0 grow items-center gap-2 rounded-[7px] border border-hair px-3">
+            <div className="flex min-h-10 min-w-0 grow items-center gap-2 rounded-[7px] border border-hair bg-surface px-3 focus-within:border-brand">
               <IconSearch size={15} className="shrink-0 text-mute" />
               <input name="q" aria-label="Search repairs" defaultValue={search} placeholder="School, repair or person" className="w-full min-w-0 bg-transparent text-[13px] outline-none" />
             </div>
-            <button className="min-h-10 rounded-[7px] border border-hair px-3 text-[12px] font-medium">Search</button>
+            <button className="min-h-10 rounded-[7px] border border-hair bg-surface px-3 text-[12px] font-medium hover:border-faint hover:bg-canvas">Search</button>
           </form>
         </div>
         <div className="flex items-center justify-between border-b border-hair-soft px-5 py-3 text-[12px] text-mute">
@@ -94,7 +95,7 @@ export default async function RepairsPage({ searchParams }: {
         </Empty></div> : rows.map((row) => {
           const open = row.status === "planned" || row.status === "in_progress";
           const cost = row.status === "done" ? row.actual_cost : row.est_cost;
-          return <Link key={row.id} href={`/repairs/${row.id}`} className="grid grid-cols-2 gap-3 border-b border-hair-soft px-5 py-4 last:border-b-0 hover:bg-surface-2 xl:grid-cols-[minmax(0,1fr)_150px_130px_100px_16px] xl:items-center">
+          return <Link key={row.id} href={`/repairs/${row.id}`} className="group grid grid-cols-2 gap-3 border-b border-hair-soft px-5 py-4 last:border-b-0 hover:bg-brand-soft/35 xl:grid-cols-[minmax(0,1fr)_150px_130px_100px_16px] xl:items-center">
             <div className="col-span-2 min-w-0 xl:col-span-1">
               <div className="flex flex-wrap items-center gap-2"><span className="text-[14px] font-semibold">{row.work_label}</span><Tag tone={REPAIR_STATUS[row.status].tone}>{REPAIR_STATUS[row.status].label}</Tag></div>
               <p className="mt-1 text-[13px] text-body">{row.school_name} · {row.facility_label}</p>
@@ -103,7 +104,7 @@ export default async function RepairsPage({ searchParams }: {
             <div className="text-[13px]"><p className="mb-1 text-[11px] text-mute">Responsible person</p><span className={open && !row.assigned_name ? "text-warn" : "text-body"}>{row.assigned_name ?? "Unassigned"}</span></div>
             <div className="text-[12px]"><p className="mb-1 text-[11px] text-mute">{row.status === "done" ? "Completed" : "Target date"}</p><span className="num text-body">{row.status === "done" ? row.done_on ?? "Not recorded" : row.target_date ?? "Not set"}</span>{open && row.days_late != null && row.days_late > 0 && <p className="num mt-1 text-bad">{row.days_late}d overdue</p>}</div>
             <div><p className="mb-1 text-[11px] text-mute">{row.status === "done" ? "Final cost" : "Estimate"}</p><span className="num text-[13px] text-body">{cost === null ? "Not recorded" : rupees(Number(cost))}</span></div>
-            <IconChevron size={15} className="hidden text-faint xl:block" />
+            <IconChevron size={15} className="hidden text-faint group-hover:text-brand xl:block" />
           </Link>;
         })}
       </Card>

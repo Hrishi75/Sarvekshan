@@ -100,16 +100,17 @@ export default async function SchoolsPage({
 
   return (
     <AppShell user={user}>
-      <div className="border-b border-hair bg-surface px-4 pb-4 pt-5 sm:px-7 xl:pb-0">
+      <div className="border-b border-hair bg-surface px-4 pb-4 pt-5 sm:px-7 sm:pt-6 xl:pb-0">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="mb-1 text-[24px] font-semibold tracking-[-0.025em]">Schools</h1>
+            <p className="page-kicker">District register</p>
+            <h1 className="mb-1 text-[28px] font-semibold tracking-[-0.035em]">Schools</h1>
             <p className="text-[13.5px] text-mute">Browse your school register, then open a school to see its visits, repairs, and follow-ups.</p>
           </div>
-          {user.role !== "volunteer" && <Link href="/schools/new" className="inline-flex min-h-11 shrink-0 items-center rounded-[7px] bg-brand px-4 text-[13px] font-semibold text-white">Add school</Link>}
+          {user.role !== "volunteer" && <Link href="/schools/new" className="inline-flex min-h-11 shrink-0 items-center rounded-[8px] bg-brand px-4 text-[13px] font-semibold text-white hover:opacity-90">Add school</Link>}
         </div>
-        <form className="mt-4 flex flex-wrap items-center gap-2" action="/schools">
-          <div className="flex min-h-11 min-w-0 w-full items-center gap-2 rounded-[8px] border border-hair bg-canvas px-3 focus-within:border-brand sm:max-w-[360px]">
+        <form className="mt-5 flex flex-wrap items-center gap-2 rounded-[10px] border border-hair-soft bg-surface-2 p-2" action="/schools">
+          <div className="flex min-h-11 min-w-0 w-full items-center gap-2 rounded-[8px] border border-hair bg-surface px-3 focus-within:border-brand sm:max-w-[380px]">
             <IconSearch size={16} className="shrink-0 text-mute" />
             <input name="q" aria-label="Search schools" defaultValue={search} placeholder="Name, UDISE code, village or block" maxLength={200} className="min-w-0 w-full bg-transparent text-[13px] outline-none placeholder:text-faint" />
           </div>
@@ -119,10 +120,10 @@ export default async function SchoolsPage({
             {blocks.map((row) => <option key={row.block} value={row.block}>{row.block}</option>)}
           </select>
           {mapView && <input type="hidden" name="view" value="map" />}
-          <button type="submit" className="min-h-11 rounded-[7px] border border-hair bg-surface px-4 text-[13px] font-medium text-body">Search</button>
+          <button type="submit" className="min-h-11 rounded-[7px] border border-hair bg-surface px-4 text-[13px] font-medium text-body hover:border-faint hover:bg-canvas">Search</button>
           {filtered && <Link href={clearFilters} className="inline-flex min-h-11 items-center px-2 text-[12px] font-medium text-brand">Clear filters</Link>}
         </form>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
           <span role="status" className="num text-[12px] text-mute">{filtered ? `${rows.length} of ${total} schools` : `${total} schools`}</span>
           <nav aria-label="School views" className="flex items-center gap-px rounded-[7px] border border-hair p-[2px]">
             <Toggle href={href("table")} on={!mapView} icon={<IconGrid size={13} />} label="List" />
@@ -151,14 +152,14 @@ export default async function SchoolsPage({
         </div>
       ) : mapView ? (
         <div className="grid gap-[14px] p-4 sm:p-7 xl:grid-cols-[minmax(0,1fr)_268px]">
-          <div className="min-w-0 rounded-[9px] border border-hair bg-surface p-[18px]">
+          <div className="min-w-0 rounded-[11px] border border-hair bg-surface p-[18px]">
             <DistrictMap schools={pins} />
             <p className="mt-3 text-[12px] text-mute"><span className="num">{pins.length} of {rows.length}</span> schools have map coordinates.</p>
           </div>
 
           {/* the map shows where the gaps are; this column names them */}
           <div className="flex min-w-0 flex-col gap-[14px]">
-            <div className="rounded-[9px] border border-hair bg-surface">
+            <div className="overflow-hidden rounded-[11px] border border-hair bg-surface">
               <div className="flex items-baseline justify-between px-[15px] pb-[9px] pt-[13px]">
                 <span className="text-[13.5px] font-semibold tracking-[-0.01em]">
                   No site evidence
@@ -188,7 +189,7 @@ export default async function SchoolsPage({
               )}
             </div>
 
-            <div className="rounded-[9px] border border-hair bg-surface">
+            <div className="overflow-hidden rounded-[11px] border border-hair bg-surface">
               <div className="px-[15px] pb-[9px] pt-[13px] text-[13.5px] font-semibold tracking-[-0.01em]">
                 Longest since a visit
               </div>
@@ -217,10 +218,10 @@ export default async function SchoolsPage({
         <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-7 xl:hidden">
           {rows.map((school) => {
             const score = school.score === null ? null : Number(school.score);
-            return <Link key={school.id} href={`/schools/${school.id}`} className="min-w-0 rounded-[9px] border border-hair bg-surface p-4 hover:border-brand">
+            return <Link key={school.id} href={`/schools/${school.id}`} className="group min-w-0 rounded-[11px] border border-hair bg-surface p-4 hover:border-brand">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-[14px] font-semibold">{school.name}</h2>
-                <IconChevron size={15} className="mt-1 shrink-0 text-faint" />
+                <IconChevron size={15} className="mt-1 shrink-0 text-faint group-hover:text-brand" />
               </div>
               <p className="mt-1 text-[12px] text-mute">{[school.village, school.block && `${school.block} block`].filter(Boolean).join(" · ") || "Location not recorded"}</p>
               <p className="num mt-1 text-[11px] text-faint">UDISE {school.udise_code ?? "not recorded"}</p>
@@ -242,7 +243,7 @@ export default async function SchoolsPage({
             <Link
               key={r.id}
               href={`/schools/${r.id}`}
-              className={`flex h-[56px] items-center border-b border-hair-soft px-7 hover:bg-surface-2 ${
+              className={`group flex h-[58px] items-center border-b border-hair-soft px-7 hover:bg-brand-soft/35 ${
                 unaudited ? "bg-surface-2/60" : "bg-surface"
               }`}
             >
@@ -302,7 +303,7 @@ export default async function SchoolsPage({
                 {relativeDays(audited)}
               </span>
 
-              <span className="flex w-[22px] justify-end text-faint">
+              <span className="flex w-[22px] justify-end text-faint group-hover:text-brand">
                 <IconChevron size={14} />
               </span>
             </Link>

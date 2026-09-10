@@ -16,7 +16,7 @@ export function Card({
   return (
     <div
       id={id}
-      className={`rounded-[9px] border border-hair bg-surface ${pad ? "p-[17px]" : ""} ${className}`}
+      className={`rounded-[11px] border border-hair bg-surface ${pad ? "p-[18px]" : ""} ${className}`}
     >
       {children}
     </div>
@@ -54,11 +54,11 @@ export function Button({
 }) {
   const style =
     variant === "primary"
-      ? "bg-brand text-white font-semibold"
-      : "border border-hair bg-surface text-body font-medium";
+      ? "bg-brand text-white font-semibold hover:opacity-90"
+      : "border border-hair bg-surface text-body font-medium hover:border-faint hover:bg-surface-2";
   return (
     <span
-      className={`inline-flex h-[33px] items-center gap-[6px] rounded-[7px] px-[13px] text-[13px] ${style} ${className}`}
+      className={`inline-flex h-[35px] items-center gap-[6px] rounded-[7px] px-[13px] text-[13px] ${style} ${className}`}
     >
       {children}
     </span>
@@ -67,7 +67,7 @@ export function Button({
 
 export function Empty({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[9px] border border-dashed border-hair px-4 py-12 text-center text-[13px] text-mute">
+    <div className="rounded-[11px] border border-dashed border-hair bg-surface-2 px-4 py-12 text-center text-[13px] text-mute">
       {children}
     </div>
   );
@@ -101,7 +101,7 @@ export function ExportLink({ dataset, id }: { dataset: string; id?: string }) {
   return (
     <a
       href={href}
-      className="inline-flex h-[31px] shrink-0 items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body hover:border-faint"
+      className="inline-flex min-h-10 shrink-0 items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[13px] text-[12.5px] font-medium text-body hover:border-faint hover:bg-surface-2"
     >
       <IconExport size={13} />
       Export CSV

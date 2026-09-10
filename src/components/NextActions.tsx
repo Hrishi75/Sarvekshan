@@ -19,11 +19,17 @@ export async function NextActions({ user }: { user: SessionUser }) {
     ] : []),
     { href: "/checks", count: counts.checks, label: "checks due", detail: user.role === "volunteer" ? "Your follow-ups due today or earlier" : "Find out whether completed repairs still work" },
   ];
-  return <section aria-labelledby="next-actions" className="mb-5 rounded-[9px] border border-hair bg-surface">
-    <h2 id="next-actions" className="border-b border-hair-soft px-4 py-3 text-[14px] font-semibold">Move the work forward</h2>
+  return <section aria-labelledby="next-actions" className="mb-5 overflow-hidden rounded-[11px] border border-hair bg-surface">
+    <div className="flex flex-wrap items-end justify-between gap-2 border-b border-hair-soft px-[18px] py-[14px]">
+      <div>
+        <h2 id="next-actions" className="text-[14.5px] font-semibold">Move the work forward</h2>
+        <p className="mt-0.5 text-[12px] text-mute">The next items that need a decision or update.</p>
+      </div>
+      <span className="num text-[11px] text-faint">{actions.length} queues</span>
+    </div>
     <div className={`grid divide-y divide-hair-soft ${actions.length > 1 ? "lg:grid-cols-3 lg:divide-x lg:divide-y-0" : ""}`}>
-      {actions.map((action) => <Link key={action.href} href={action.href} className="group px-4 py-4 hover:bg-surface-2">
-        <div className="flex items-center gap-2 text-[13px]"><span className="num text-[20px] font-semibold">{action.count}</span><span className="font-medium">{action.label}</span><span className="ml-auto text-brand" aria-hidden>→</span></div>
+      {actions.map((action) => <Link key={action.href} href={action.href} className="group px-[18px] py-4 hover:bg-surface-2">
+        <div className="flex items-center gap-2 text-[13px]"><span className="num text-[22px] font-semibold tracking-[-0.02em]">{action.count}</span><span className="font-medium">{action.label}</span><span className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-brand-soft text-brand group-hover:bg-brand group-hover:text-white" aria-hidden>→</span></div>
         <p className="mt-1 text-[12px] text-mute">{action.detail}</p>
       </Link>)}
     </div>
