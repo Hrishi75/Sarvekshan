@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   compressImage,
   db,
@@ -11,7 +12,7 @@ import {
 } from "@/lib/offline";
 import type { FacilityType } from "@/lib/types";
 
-type NearbySchool = {
+export type NearbySchool = {
   id: string;
   name: string;
   village: string | null;
@@ -22,20 +23,20 @@ type NearbySchool = {
 type Step = "school" | "facility" | "state" | "capture" | "done";
 type FacilityState = "working" | "problem" | "broken";
 
-const STATE_META: { key: FacilityState; label: string; hi: string; tone: string }[] = [
-  { key: "working", label: "Working", hi: "ठीक है", tone: "bg-good text-white" },
-  { key: "problem", label: "Problem", hi: "समस्या", tone: "bg-warn text-white" },
-  { key: "broken", label: "Broken", hi: "खराब", tone: "bg-bad text-white" },
+const STATE_META: { key: FacilityState; label: string; tone: string }[] = [
+  { key: "working", label: "Working", tone: "bg-good text-white" },
+  { key: "problem", label: "Problem", tone: "bg-warn text-white" },
+  { key: "broken", label: "Broken", tone: "bg-bad text-white" },
 ];
 
-export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
+export function VisitFlow({ facilities, initialSchool = null }: { facilities: FacilityType[]; initialSchool?: NearbySchool | null }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("school");
+  const [step, setStep] = useState<Step>(initialSchool ? "facility" : "school");
 
   const [schools, setSchools] = useState<NearbySchool[]>([]);
   const [located, setLocated] = useState(false);
-  const [loadingSchools, setLoadingSchools] = useState(true);
-  const [school, setSchool] = useState<NearbySchool | null>(null);
+  const [loadingSchools, setLoadingSchools] = useState(!initialSchool);
+  const [school, setSchool] = useState<NearbySchool | null>(initialSchool);
   const [facility, setFacility] = useState<FacilityType | null>(null);
   const [facilityState, setFacilityState] = useState<FacilityState | null>(null);
 
@@ -55,6 +56,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
     (async () => {
       const pos = await getPosition();
       if (pos) posRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if (initialSchool) return;
       const qs = pos
         ? `?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`
         : "";
@@ -73,7 +75,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [initialSchool]);
 
   // derived, not state — creating it in an effect causes a cascading render
   const photoUrl = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
@@ -250,6 +252,7 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
               ))}
             </ul>
           )}
+          <Link href="/schools" className="tap mt-3 flex items-center justify-center rounded border border-hair bg-surface px-4 text-sm font-medium text-brand">Browse all schools</Link>
         </section>
       )}
 
@@ -267,7 +270,6 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
                 className="flex min-h-24 flex-col items-center justify-center gap-1 rounded border border-hair bg-surface px-2 py-3 text-center hover:border-brand"
               >
                 <span className="text-sm font-semibold leading-tight">{f.label_en}</span>
-                <span className="text-xs text-mute">{f.label_hi}</span>
               </button>
             ))}
           </div>
@@ -288,7 +290,6 @@ export function VisitFlow({ facilities }: { facilities: FacilityType[] }) {
                 className={`flex min-h-16 items-center justify-between rounded px-5 text-left text-lg font-semibold ${s.tone}`}
               >
                 <span>{s.label}</span>
-                <span className="text-sm font-normal opacity-90">{s.hi}</span>
               </button>
             ))}
           </div>

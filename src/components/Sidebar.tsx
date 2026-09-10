@@ -11,6 +11,8 @@ import {
   IconGrant,
   IconCheckList,
   IconSignOut,
+  IconRepair,
+  IconMenu,
 } from "./icons";
 
 type Nav = { href: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
@@ -21,7 +23,7 @@ export function Sidebar({
   blocks,
 }: {
   user: { name: string; role: string };
-  counts: { schools: number; findings: number; checks: number; inbox: number };
+  counts: { schools: number; findings: number; checks: number; inbox: number; repairs: number };
   blocks: { block: string; n: number; avg_score: number | null }[];
 }) {
   const path = usePathname();
@@ -31,6 +33,7 @@ export function Sidebar({
   const desk: Nav[] = [
     { href: "/", label: "Overview", icon: <IconGrid size={16} /> },
     { href: "/schools", label: "Schools", icon: <IconSchool size={16} />, count: counts.schools },
+    { href: "/repairs", label: "Repairs", icon: <IconRepair size={16} />, count: counts.repairs },
     {
       href: "/findings",
       label: "Findings",
@@ -72,7 +75,9 @@ export function Sidebar({
     return (
       <Link
         href={n.href}
-        className={`flex h-[34px] items-center gap-[10px] rounded-[6px] px-[9px] text-[13.5px] ${
+        aria-current={active ? "page" : undefined}
+        onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}
+        className={`flex min-h-11 items-center gap-[10px] rounded-[6px] px-[9px] text-[13.5px] md:min-h-[34px] ${
           active
             ? "bg-brand-soft font-semibold text-brand"
             : "font-medium text-body hover:bg-surface-2"
@@ -95,8 +100,21 @@ export function Sidebar({
     );
   }
 
-  return (
-    <aside className="flex w-[232px] shrink-0 flex-col overflow-y-auto border-r border-hair bg-surface">
+  return (<>
+    <div className="shrink-0 border-b border-hair bg-surface px-4 py-3 md:hidden">
+      <details>
+        <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-semibold">
+          <span className="flex items-center gap-2"><IconSchool size={18} className="text-brand" />Sarvekshan</span>
+          <span className="flex items-center gap-2 rounded-[6px] border border-hair px-3 py-2 text-[12px] text-body">Menu <IconMenu size={14} /></span>
+        </summary>
+        <nav aria-label="Mobile navigation" className="mt-3 grid max-h-[50dvh] grid-cols-2 gap-2 overflow-y-auto pb-2">
+          {[...desk, ...field].map((n) => <Item key={n.href} n={n} />)}
+          <Link href="/password" className="px-2 py-3 text-[12px] text-body">{user.name} · Account</Link>
+          <form action="/api/signout" method="post"><button className="px-2 py-3 text-[12px] text-body">Sign out</button></form>
+        </nav>
+      </details>
+    </div>
+    <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r border-hair bg-surface md:flex">
       <Link href="/" className="flex items-center gap-[9px] px-[18px] pb-[20px] pt-[18px]">
         <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] bg-brand text-white">
           <IconSchool size={15} />
@@ -175,5 +193,6 @@ export function Sidebar({
         </form>
       </div>
     </aside>
+    </>
   );
 }

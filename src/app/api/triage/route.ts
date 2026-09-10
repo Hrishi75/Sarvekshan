@@ -1,53 +1,23 @@
 import { NextResponse } from "next/server";
-import { q1, tx } from "@/lib/db";
+import { z } from "zod";
+import { tx } from "@/lib/db";
 import { currentUser } from "@/lib/session";
+import { RepairError, triageObservation } from "@/lib/repairs";
 
 export async function POST(req: Request) {
   const user = await currentUser();
-  if (!user || user.role === "volunteer") {
-    return NextResponse.json({ error: "not allowed" }, { status: 403 });
+  if (!user || user.role === "volunteer") return NextResponse.json({ error: "not allowed" }, { status: 403 });
+  const fd = await req.formData().catch(() => null);
+  const parsed = z.object({ observation_id: z.uuid(), action: z.enum(["create_work", "dismiss"]) })
+    .safeParse(fd ? Object.fromEntries(fd) : null);
+  if (!parsed.success) return NextResponse.json({ error: "Invalid triage request." }, { status: 400 });
+  try {
+    const workId = await tx((c) => triageObservation(c, user, parsed.data.observation_id, parsed.data.action));
+    return NextResponse.redirect(new URL(workId ? `/repairs/${workId}` : "/inbox", req.url), { status: 303 });
+  } catch (error) {
+    if (!(error instanceof RepairError)) console.error("Triage failed", error);
+    const url = new URL("/inbox", req.url);
+    url.searchParams.set("error", error instanceof RepairError ? error.message : "Could not save your decision. Please try again.");
+    return NextResponse.redirect(url, { status: 303 });
   }
-
-  const fd = await req.formData();
-  const observationId = String(fd.get("observation_id") ?? "");
-  const action = String(fd.get("action") ?? "");
-  if (!observationId) return NextResponse.json({ error: "bad payload" }, { status: 400 });
-
-  const obs = await q1<{ school_id: string; facility_key: string; note_text: string | null }>(
-    `SELECT school_id, facility_key, note_text FROM observations
-      WHERE id=$1 AND org_id=$2`,
-    [observationId, user.org_id]
-  );
-  if (!obs) return NextResponse.json({ error: "not found" }, { status: 404 });
-
-  if (action === "dismiss") {
-    await q1(
-      `UPDATE observations SET triaged_at=now(), dismissed_reason='dismissed at triage'
-        WHERE id=$1 AND org_id=$2`,
-      [observationId, user.org_id]
-    );
-  } else if (action === "create_work") {
-    await tx(async (c) => {
-      const { rows } = await c.query<{ key: string }>(
-        `SELECT key FROM work_types WHERE facility_key=$1 ORDER BY sort_order LIMIT 1`,
-        [obs.facility_key]
-      );
-      const workTypeKey = rows[0]?.key ?? "classroom_repair";
-      const { rows: w } = await c.query<{ id: string }>(
-        `INSERT INTO works (org_id, school_id, facility_key, work_type_key, description,
-                            status, client_uuid)
-         VALUES ($1,$2,$3,$4,$5,'planned', gen_random_uuid())
-         RETURNING id`,
-        [user.org_id, obs.school_id, obs.facility_key, workTypeKey, obs.note_text]
-      );
-      await c.query(
-        `INSERT INTO work_observations (work_id, observation_id) VALUES ($1,$2)
-         ON CONFLICT DO NOTHING`,
-        [w[0].id, observationId]
-      );
-      await c.query(`UPDATE observations SET triaged_at=now() WHERE id=$1`, [observationId]);
-    });
-  }
-
-  return NextResponse.redirect(new URL("/inbox", req.url), { status: 303 });
 }

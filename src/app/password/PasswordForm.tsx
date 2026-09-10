@@ -18,7 +18,7 @@ export function PasswordForm({ needsCurrent }: { needsCurrent: boolean }) {
       {needsCurrent && (
         <div>
           <label htmlFor="current" className="mb-[6px] block text-[13px] font-medium">
-            Current password <span className="font-normal text-mute">मौजूदा पासवर्ड</span>
+            Current password
           </label>
           <input
             id="current"
@@ -35,14 +35,14 @@ export function PasswordForm({ needsCurrent }: { needsCurrent: boolean }) {
       <div>
         <div className="mb-[6px] flex items-baseline justify-between">
           <label htmlFor="next" className="text-[13px] font-medium">
-            New password <span className="font-normal text-mute">नया पासवर्ड</span>
+            New password
           </label>
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
             className="text-[11.5px] font-medium text-brand"
           >
-            {show ? "Hide छिपाएँ" : "Show दिखाएँ"}
+            {show ? "Hide" : "Show"}
           </button>
         </div>
         <input
@@ -61,13 +61,13 @@ export function PasswordForm({ needsCurrent }: { needsCurrent: boolean }) {
           }`}
         />
         <p id="next-hint" className={`mt-[5px] text-[11.5px] ${short ? "text-warn" : "text-faint"}`}>
-          At least {MIN_PASSWORD_LENGTH} characters · कम से कम {MIN_PASSWORD_LENGTH} अक्षर
+          At least {MIN_PASSWORD_LENGTH} characters
         </p>
       </div>
 
       <div>
         <label htmlFor="confirm" className="mb-[6px] block text-[13px] font-medium">
-          Type it again <span className="font-normal text-mute">दोबारा लिखें</span>
+          Type it again
         </label>
         <input
           id="confirm"
@@ -84,7 +84,7 @@ export function PasswordForm({ needsCurrent }: { needsCurrent: boolean }) {
         type="submit"
         className="tap mt-[2px] w-full rounded-[8px] bg-brand text-[15px] font-semibold text-white active:opacity-90"
       >
-        Save password <span className="font-medium opacity-80">पासवर्ड सेव करें</span>
+        Save password
       </button>
     </form>
   );

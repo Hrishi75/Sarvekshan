@@ -15,7 +15,7 @@ export function SignInForm() {
     <form action="/api/signin" method="post" className="flex flex-col gap-[14px]">
       <div>
         <label htmlFor="phone" className="mb-[6px] block text-[13px] font-medium">
-          Phone number <span className="font-normal text-mute">फ़ोन नंबर</span>
+          Phone number
         </label>
         <div className="flex items-center gap-0 overflow-hidden rounded-[8px] border border-hair bg-surface focus-within:border-brand">
           <span className="num shrink-0 border-r border-hair px-[11px] py-[14px] text-[15px] text-mute">
@@ -43,14 +43,14 @@ export function SignInForm() {
       <div>
         <div className="mb-[6px] flex items-baseline justify-between">
           <label htmlFor="password" className="text-[13px] font-medium">
-            Password <span className="font-normal text-mute">पासवर्ड</span>
+            Password
           </label>
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
             className="text-[11.5px] font-medium text-brand"
           >
-            {show ? "Hide छिपाएँ" : "Show दिखाएँ"}
+            {show ? "Hide" : "Show"}
           </button>
         </div>
         <input
@@ -67,7 +67,7 @@ export function SignInForm() {
         type="submit"
         className="tap mt-[2px] w-full rounded-[8px] bg-brand text-[15px] font-semibold text-white active:opacity-90"
       >
-        Sign in <span className="font-medium opacity-80">साइन इन करें</span>
+        Sign in
       </button>
     </form>
   );

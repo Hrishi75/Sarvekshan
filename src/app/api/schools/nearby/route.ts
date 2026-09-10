@@ -11,10 +11,10 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
   const url = new URL(req.url);
-  const lat = Number(url.searchParams.get("lat"));
-  const lng = Number(url.searchParams.get("lng"));
+  const lat = url.searchParams.get("lat")?.trim() ? Number(url.searchParams.get("lat")) : NaN;
+  const lng = url.searchParams.get("lng")?.trim() ? Number(url.searchParams.get("lng")) : NaN;
 
-  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+  if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
     const rows = await q(
       `SELECT id, name, village, block,
               round(earth_distance(ll_to_earth($2,$3), ll_to_earth(lat,lng))::numeric) AS distance_m

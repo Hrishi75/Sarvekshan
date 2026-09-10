@@ -8,7 +8,6 @@ export type Independence = "independent" | "affiliated" | "self";
 export type FacilityType = {
   key: string;
   label_en: string;
-  label_hi: string;
   sort_order: number;
 };
 

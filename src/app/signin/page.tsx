@@ -10,26 +10,22 @@ export const dynamic = "force-dynamic";
 
 // One code per outcome rather than a message in the query string: the URL is not
 // a place to let anything choose what the page says.
-const NOTICES: Record<string, { tone: "bad" | "plain"; en: string; hi: string }> = {
+const NOTICES: Record<string, { tone: "bad" | "plain"; message: string }> = {
   credentials: {
     tone: "bad",
-    en: "That phone number and password do not match.",
-    hi: "फ़ोन नंबर या पासवर्ड ग़लत है।",
+    message: "That phone number and password do not match.",
   },
   missing: {
     tone: "bad",
-    en: "Enter your phone number and your password.",
-    hi: "फ़ोन नंबर और पासवर्ड दोनों भरें।",
+    message: "Enter your phone number and your password.",
   },
   locked: {
     tone: "bad",
-    en: "Too many wrong attempts. Wait fifteen minutes, or ask your coordinator to reset it.",
-    hi: "बहुत बार ग़लत कोशिश। पंद्रह मिनट रुकें, या कोऑर्डिनेटर से रीसेट कराएँ।",
+    message: "Too many wrong attempts. Wait fifteen minutes, or ask your coordinator to reset it.",
   },
   signedout: {
     tone: "plain",
-    en: "You are signed out.",
-    hi: "आप साइन आउट हो गए हैं।",
+    message: "You are signed out.",
   },
 };
 
@@ -54,7 +50,7 @@ export default async function SignIn({
         </span>
         <div>
           <h1 className="text-[21px] font-semibold tracking-[-0.02em]">Sarvekshan</h1>
-          <p className="text-[12.5px] text-mute">School repair register · स्कूल मरम्मत रजिस्टर</p>
+          <p className="text-[12.5px] text-mute">School repair register</p>
         </div>
       </div>
 
@@ -67,8 +63,7 @@ export default async function SignIn({
               : "border-hair bg-surface-2 text-body"
           }`}
         >
-          <span className="block font-medium">{notice.en}</span>
-          <span className="block opacity-80">{notice.hi}</span>
+          <span className="block font-medium">{notice.message}</span>
         </div>
       )}
 
@@ -78,9 +73,6 @@ export default async function SignIn({
 
       <p className="mt-[14px] px-1 text-center text-[12px] leading-[1.55] text-mute">
         Forgot your password? Ask your coordinator to reset it.
-        <span className="block text-faint">
-          पासवर्ड भूल गए? अपने कोऑर्डिनेटर से रीसेट कराएँ।
-        </span>
       </p>
 
       {devSignInEnabled() && <DevPicker />}

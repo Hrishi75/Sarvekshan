@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { IconSignOut } from "./icons";
+import { IconSignOut, IconSchool } from "./icons";
 
 export function FieldShell({
   title,
@@ -40,6 +40,9 @@ export function FieldShell({
           </div>
           {user && <FieldAccount name={user.name} />}
         </div>
+        {user && <nav aria-label="Field navigation" className="border-t border-hair-soft px-4">
+          <Link href="/schools" className="inline-flex min-h-11 items-center gap-2 text-[13px] font-medium text-brand"><IconSchool size={15} />Schools</Link>
+        </nav>}
       </header>
       <main className="grow px-4 py-4">{children}</main>
     </div>

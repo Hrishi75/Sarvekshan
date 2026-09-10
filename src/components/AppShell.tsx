@@ -19,6 +19,7 @@ export async function AppShell({
     findings: string;
     checks: string;
     inbox: string;
+    repairs: string;
   }>(
     `SELECT
        (SELECT count(*) FROM schools WHERE org_id=$1)                       AS schools,
@@ -27,6 +28,7 @@ export async function AppShell({
        (SELECT count(*) FROM checks
          WHERE org_id=$1 AND state IN ('pending','sent')
            AND due_on <= current_date + 14)                                 AS checks,
+       (SELECT count(*) FROM works WHERE org_id=$1 AND status IN ('planned','in_progress')) AS repairs,
        (SELECT count(*) FROM observations
          WHERE org_id=$1 AND triaged_at IS NULL AND state <> 'working')     AS inbox`,
     [user.org_id]
@@ -41,7 +43,7 @@ export async function AppShell({
   );
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
       <Sidebar
         user={{ name: user.name, role: user.role }}
         counts={{
@@ -49,6 +51,7 @@ export async function AppShell({
           findings: Number(counts?.findings ?? 0),
           checks: Number(counts?.checks ?? 0),
           inbox: Number(counts?.inbox ?? 0),
+          repairs: Number(counts?.repairs ?? 0),
         }}
         blocks={blocks.map((b) => ({
           block: b.block,
@@ -58,13 +61,13 @@ export async function AppShell({
       />
 
       <div className="flex min-w-0 grow flex-col">
-        <header className="flex h-[56px] shrink-0 items-center gap-[14px] border-b border-hair bg-surface px-6">
+        <header className="flex h-[56px] shrink-0 items-center gap-3 border-b border-hair bg-surface px-4 sm:px-6">
           <CommandPalette />
           <div className="grow" />
           {actions ?? (
             <a
               href="/visit"
-              className="inline-flex h-[32px] items-center gap-[7px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white"
+              className="inline-flex min-h-10 shrink-0 items-center gap-[7px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white"
             >
               <IconPlus size={14} />
               New audit

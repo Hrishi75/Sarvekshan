@@ -88,3 +88,15 @@ export const IconLock = ({ size = 16, className }: P) => (
     <path d="M8 10V7a4 4 0 0 1 8 0v3" />
   </svg>
 );
+
+export const IconRepair = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M14.5 6.5 18 3a6 6 0 0 0-7.5 7.5L3 18a2.1 2.1 0 0 0 3 3l7.5-7.5A6 6 0 0 0 21 6l-3.5 3.5z" />
+  </svg>
+);
+
+export const IconMenu = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className} aria-hidden="true">
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);

@@ -13,7 +13,7 @@ flow targets under sixty seconds, needs no typing, and completes with the networ
 npm install
 cp .env.example .env.local   # then fill in DATABASE_URL and FR_SESSION_SECRET
 npm run db:migrate           # applies db/migrations/*.sql
-npm run seed                 # 12 schools, 44 works, a year of follow-up checks
+npm run seed                 # 12 schools, a year of completed work, and an open repair queue
 npm run dev                  # http://localhost:3000
 ```
 
@@ -122,6 +122,49 @@ Two deliberate choices in `src/lib/survival.ts`:
 - **Zero survival is a finding, not a missing value.** When nothing survived to the last
   checkpoint, the row says so explicitly instead of rendering blank.
 
+## School register
+
+All signed-in users can browse `/schools`, search by school name, UDISE code,
+village, or block, and filter by block. The list uses cards on phones and a table
+on larger screens; the map shows schools with coordinates. Field screens link
+directly to the register, and **New audit** on a school record selects that school.
+
+Coordinators and admins can choose **Add school**. Only the name is required;
+UDISE code, location, enrolment, and coordinates can be left unknown. A new school
+has no score until there is site evidence. Repeated saves reuse the same record,
+and an existing UDISE code links back to its school instead of creating a duplicate.
+
+## Managing repairs
+
+Review a report in `/inbox` and choose **Plan repair**. The linked repair opens at
+`/repairs/[id]`, where a coordinator can select the repair type, assign an owner,
+set a target date, and record estimates, final costs, and materials. `/repairs`
+shows the open queue, overdue targets, and unassigned work, with search and status filters.
+Each school record also links to its repairs.
+
+Completing a repair requires the actual cost (zero is allowed), completion date,
+and the person who performed it. The existing database trigger schedules the four
+follow-ups and chooses a different local checker where available. Completed records
+are read-only to protect their follow-up history. Editing requires a connection;
+failed saves retain the form entries. Site observations still use offline capture.
+
+Repeated triage submissions reuse the original repair. Concurrent edits are rejected
+with a prompt to load the latest record, so one coordinator cannot silently overwrite another.
+Migration `0006_notice_board_work_type.sql` adds the previously missing notice-board repair type.
+
+Run `npm test` for input validation and `npm run test:repairs` for the repair lifecycle
+against your migrated PostgreSQL database. The database tests use isolated fixtures in a
+transaction and roll them back, covering permissions, duplicate triage, stale edits,
+costs, completion, and automatic follow-ups.
+
+`npm run seed` builds an open queue to work through: fourteen repairs across planned and
+in progress, some past their target date, some with no owner, some not yet estimated. Every
+one is linked to the report it came from, so a record shows where it started. The mix is
+written out rather than randomised — a random draw can produce nothing overdue and nothing
+unassigned, and then the queue looks empty for whoever seeds it next. None of them schedule
+a check: `works_schedule_checks()` returns early on anything short of completed, and the
+survival figures count only completed work.
+
 ## What is not built yet
 
 - Phone OTP (password sign-in is in place; see **Signing in** above)
@@ -132,7 +175,7 @@ Two deliberate choices in `src/lib/survival.ts`:
   template approval is slow and sits on the critical path
 - The ghost-overlay camera for repeat photography (`photo_points` schema is in place;
   the capture UI currently takes a plain photo)
-- Work-order editing, bill OCR, the auto-assembled donor report
+- Bill OCR, the auto-assembled donor report
 - The public per-school share page (`schools.is_public` exists, off by default)
 - Server-side face blur on ingest
 
@@ -147,5 +190,6 @@ src/lib/           db, session, passwords, offline queue, survival maths, storag
 src/app/visit/     the sixty-second capture flow — the screen it all depends on
 src/app/checks/    follow-up checks, and completing one
 src/app/inbox/     coordinator triage
+src/app/repairs/   repair assignment, costs, completion, and follow-up history
 src/app/survival/  what is still working
 ```

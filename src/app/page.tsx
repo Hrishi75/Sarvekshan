@@ -8,6 +8,7 @@ import { AppShell } from "@/components/AppShell";
 import { SurvivalChart } from "@/components/SurvivalChart";
 import { Card, Tag, rupees } from "@/components/ui";
 import { IconExport, IconUp, IconDown } from "@/components/icons";
+import { NextActions } from "@/components/NextActions";
 
 export default async function Overview() {
   const user = await currentUser();
@@ -64,8 +65,8 @@ export default async function Overview() {
 
   return (
     <AppShell user={user}>
-      <div className="p-6">
-        <div className="mb-5 flex items-end justify-between">
+      <div className="p-4 sm:p-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-[24px] font-semibold tracking-[-0.025em]">Lucknow district</h1>
             <p className="mt-[3px] text-[13.5px] text-mute">
@@ -82,8 +83,9 @@ export default async function Overview() {
           </a>
         </div>
 
+        <NextActions user={user} />
         {/* stat row */}
-        <div className="mb-3 grid grid-cols-4 gap-3">
+        <div className="mb-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Card>
             <div className="mb-[9px] text-[12px] font-medium text-mute">Average score</div>
             <div className="flex items-baseline gap-2">
@@ -149,8 +151,8 @@ export default async function Overview() {
         </div>
 
         {/* survival + findings */}
-        <div className="grid grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-3">
-          <Card className="!p-[18px_20px_14px_20px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+          <Card className="min-w-0 !p-[18px_20px_14px_20px]">
             <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
               What survives after we leave
             </div>
@@ -167,7 +169,7 @@ export default async function Overview() {
             )}
           </Card>
 
-          <Card pad={false} className="flex flex-col overflow-hidden">
+          <Card pad={false} className="flex min-w-0 flex-col overflow-hidden">
             <div className="flex items-center justify-between px-[18px] pb-3 pt-4">
               <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Needs attention</span>
               <span className="num text-[11px] text-faint">{findings.length}</span>

@@ -8,31 +8,26 @@ import { PasswordForm } from "./PasswordForm";
 
 export const dynamic = "force-dynamic";
 
-const NOTICES: Record<string, { tone: "bad" | "good"; en: string; hi: string }> = {
+const NOTICES: Record<string, { tone: "bad" | "good"; message: string }> = {
   "wrong-current": {
     tone: "bad",
-    en: "That is not your current password.",
-    hi: "मौजूदा पासवर्ड ग़लत है।",
+    message: "That is not your current password.",
   },
   mismatch: {
     tone: "bad",
-    en: "The two new passwords are not the same.",
-    hi: "दोनों नए पासवर्ड एक जैसे नहीं हैं।",
+    message: "The two new passwords are not the same.",
   },
   weak: {
     tone: "bad",
-    en: "Use at least ten characters.",
-    hi: "कम से कम दस अक्षर इस्तेमाल करें।",
+    message: "Use at least ten characters.",
   },
   same: {
     tone: "bad",
-    en: "That is the password you already have. Choose a different one.",
-    hi: "यह वही पुराना पासवर्ड है। कोई दूसरा चुनें।",
+    message: "That is the password you already have. Choose a different one.",
   },
   changed: {
     tone: "good",
-    en: "Password changed. Use it the next time you sign in.",
-    hi: "पासवर्ड बदल गया। अगली बार साइन इन करते समय यही इस्तेमाल करें।",
+    message: "Password changed. Use it the next time you sign in.",
   },
 };
 
@@ -69,7 +64,7 @@ export default async function PasswordPage({
             {forced ? "Choose your password" : "Change your password"}
           </h1>
           <p className="text-[12.5px] text-mute">
-            {user.name} · {forced ? "अपना पासवर्ड चुनें" : "पासवर्ड बदलें"}
+            {user.name}
           </p>
         </div>
       </div>
@@ -78,9 +73,6 @@ export default async function PasswordPage({
         <div className="mb-[14px] rounded-[8px] border border-warn/25 bg-warn-soft px-[13px] py-[10px] text-[12.5px] text-warn">
           <span className="block font-medium">
             You signed in with a temporary password. Choose your own before you go on.
-          </span>
-          <span className="block opacity-80">
-            आपने अस्थायी पासवर्ड से साइन इन किया है। आगे बढ़ने से पहले अपना पासवर्ड चुनें।
           </span>
         </div>
       )}
@@ -94,8 +86,7 @@ export default async function PasswordPage({
               : "border-good/25 bg-good-soft text-good"
           }`}
         >
-          <span className="block font-medium">{notice.en}</span>
-          <span className="block opacity-80">{notice.hi}</span>
+          <span className="block font-medium">{notice.message}</span>
         </div>
       )}
 
@@ -104,7 +95,7 @@ export default async function PasswordPage({
           href="/"
           className="tap flex w-full items-center justify-center rounded-[8px] bg-brand text-[15px] font-semibold text-white"
         >
-          Continue <span className="ml-1 font-medium opacity-80">आगे बढ़ें</span>
+          Continue
         </Link>
       ) : (
         <>

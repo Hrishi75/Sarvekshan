@@ -190,6 +190,128 @@ try {
     );
   }
 
+  // Open repairs — the queue /repairs exists to work through. Until now every
+  // seeded work was already 'done', so the repair screens rendered empty and the
+  // editable path was unreachable: a completed repair is read-only on purpose.
+  //
+  // Each one is born the way a real one is — a report someone filed, triaged
+  // into a repair — so the record shows the report it came from instead of a
+  // repair that appeared from nowhere.
+  //
+  // Status stays short of 'done', so works_schedule_checks() returns early and
+  // nothing here schedules a check. Checks belong to completed work, and they
+  // come from the trigger.
+  //
+  // The mix is written out rather than randomised: a random draw can easily
+  // produce no overdue repair and nothing unassigned, and then the queue looks
+  // empty again for the next person who seeds it. Every state the UI can show
+  // is guaranteed to be present.
+  //   target: days from today, negative is overdue, null is not set yet
+  //   est:    rupees, null is not estimated yet
+  //   owner:  null is unassigned
+  const OPEN_REPAIRS = [
+    ["water_handpump",   "in_progress", "field", -12, 8500,
+     "Handle assembly loose and the water comes up muddy. Mechanic has seen it, parts on order.",
+     "Handle assembly, washers, riser pipe if the bore is scored"],
+    ["toilet_repair",    "in_progress", "field", -6, 14000,
+     "Girls' block: two doors without working latches, one pan cracked. Not being used at present.",
+     "Latches, hinges, one pan, cement"],
+    ["electrical_fans",  "in_progress", "field", 3, 6200,
+     "Three fans dead in the upper primary room since the storm. Wiring checked, capacitors gone.",
+     "Capacitors, one replacement fan, switch board"],
+    ["classroom_repair", "in_progress", "local", 9, 23000,
+     "Ceiling leaks above the back row whenever it rains. Children moved to the front for now.",
+     "Roof sheets, sealant, two rafters"],
+    ["water_tank",       "in_progress", "field", 16, 31000,
+     "Overhead tank empties overnight. Motor runs but the float valve is stuck open.",
+     "Float valve, foot valve, 20mm pipe"],
+    ["electrical_lights","in_progress", "local", 21, 4800,
+     "Two rooms have no working light. Wiring is exposed near the door and needs boxing in.",
+     "Tube fittings, conduit, junction boxes"],
+
+    ["boundary_repair",  "planned", "field", -19, 47000,
+     "Boundary wall down for about twelve feet on the road side. Cattle are getting into the yard.",
+     ""],
+    ["furniture_supply", "planned", "field", -3, 38000,
+     "Two classrooms are short of benches; children are sitting on the floor at the back.",
+     ""],
+    ["paint",            "planned", "local", 27, 16500,
+     "Front block has not been painted in four years. Plaster is sound, only surface work needed.",
+     ""],
+    ["kitchen_repair",   "planned", "field", 34, 12000,
+     "Kitchen chimney blocked and the smoke stays in the room while the meal is cooked.",
+     ""],
+    ["notice_board_repair", "planned", "local", 12, null,
+     "Notice board frame has come away from the wall. Needs refixing before the term notices go up.",
+     ""],
+    ["playground_equip", "planned", null, 45, 21000,
+     "Swing frame is rusted through at one joint and has been roped off. Needs replacing, not patching.",
+     ""],
+    ["water_purifier",   "planned", null, null, 18000,
+     "No working purifier; children drink straight from the handpump. Waiting on a quote.",
+     ""],
+    ["toilet_build",     "planned", null, null, null,
+     "Boys have no usable toilet on site. Awaiting a site decision before this can be estimated.",
+     ""],
+  ];
+
+  const REPORTED = {
+    water_handpump: "Handpump handle loose, water muddy",
+    toilet_repair: "Door latch broken, girls not using it",
+    electrical_fans: "Fans not working since the storm",
+    classroom_repair: "Ceiling leaking above the back row",
+    water_tank: "Tank empty by morning every day",
+    electrical_lights: "No light in two rooms, wires hanging near the door",
+    boundary_repair: "Wall broken on the road side, cattle coming in",
+    furniture_supply: "Children sitting on the floor, benches short",
+    paint: "Walls dirty and peeling in the front block",
+    kitchen_repair: "Kitchen fills with smoke while cooking",
+    notice_board_repair: "Notice board hanging off the wall",
+    playground_equip: "Swing frame rusted through, tied off",
+    water_purifier: "No purifier, children drinking from the handpump",
+    toilet_build: "Boys have no toilet they can use",
+  };
+
+  let openCount = 0;
+  for (let i = 0; i < OPEN_REPAIRS.length; i++) {
+    const [wt, status, ownerKind, target, est, description, materials] = OPEN_REPAIRS[i];
+    const sid = auditable[i % auditable.length];
+    const { rows: [wtRow] } = await c.query(`SELECT facility_key FROM work_types WHERE key=$1`, [wt]);
+    const facility = wtRow.facility_key;
+    const owner = ownerKind === "field" ? pick([fieldA, fieldB]) : ownerKind === "local" ? pick(locals) : null;
+
+    // the report that started it, filed before the repair was planned
+    const reportedDaysAgo = 8 + Math.floor(Math.random() * 30);
+    const vid = uid();
+    await c.query(
+      `INSERT INTO visits (id, org_id, school_id, by_user_id, source, occurred_at, client_uuid)
+       VALUES ($1,$2,$3,$4,'app', now() - ($5||' days')::interval, $6)`,
+      [vid, orgId, sid, pick([fieldA, fieldB, ...locals]), reportedDaysAgo, uid()]
+    );
+    const { rows: [obs] } = await c.query(
+      `INSERT INTO observations (org_id, visit_id, school_id, facility_key, state, note_text,
+                                 created_at, triaged_at)
+       VALUES ($1,$2,$3,$4,'broken',$5, now() - ($6||' days')::interval,
+               now() - ($7||' days')::interval)
+       RETURNING id`,
+      [orgId, vid, sid, facility, REPORTED[wt] ?? null, reportedDaysAgo, Math.max(0, reportedDaysAgo - 4)]
+    );
+
+    const wid = uid();
+    await c.query(
+      `INSERT INTO works (id, org_id, school_id, facility_key, work_type_key, description, materials,
+                          status, est_cost_paise, assigned_to_id, target_date, client_uuid, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8::work_status,$9,$10,
+               $11::date, $12, now() - ($13||' days')::interval)`,
+      [wid, orgId, sid, facility, wt, description, materials || null, status,
+       est === null ? null : est * 100, owner,
+       target === null ? null : new Date(Date.now() + target * 864e5).toISOString().slice(0, 10),
+       uid(), Math.max(0, reportedDaysAgo - 4)]
+    );
+    await c.query(`INSERT INTO work_observations (work_id, observation_id) VALUES ($1,$2)`, [wid, obs.id]);
+    openCount++;
+  }
+
   // a handful of untriaged observations for the coordinator inbox
   for (let i = 0; i < 14; i++) {
     const sid = pick(auditable);
@@ -225,7 +347,7 @@ try {
             (SELECT count(*) FROM grants) grants`
   );
   console.log("seeded:", stat);
-  console.log(`works created: ${workCount}, checks completed: ${checkDone}`);
+  console.log(`works created: ${workCount} completed + ${openCount} open, checks completed: ${checkDone}`);
 
   const rule = "\u2500".repeat(60);
   console.log(`\n${rule}\n  SIGN IN AT /signin\n${rule}`);
