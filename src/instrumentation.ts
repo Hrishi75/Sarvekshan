@@ -32,17 +32,22 @@ export function register() {
     problems.push("DATABASE_URL is not set. Nothing can be read or written without it.");
   }
 
+  if (!process.env.FR_MEDIA_ROOT) {
+    problems.push(
+      "FR_MEDIA_ROOT is not set. Uploaded evidence needs a durable directory mounted into the server."
+    );
+  }
+
+  if (process.env.FR_ALLOW_DEV_SIGNIN === "1") {
+    problems.push(
+      "FR_ALLOW_DEV_SIGNIN cannot be enabled in production because it bypasses every credential."
+    );
+  }
+
   if (problems.length > 0) {
     throw new Error(
       `\n\nSarvekshan cannot start:\n\n${problems.map((p) => `- ${p}`).join("\n\n")}\n`
     );
   }
 
-  if (process.env.FR_ALLOW_DEV_SIGNIN === "1") {
-    console.warn(
-      "\n  ⚠ FR_ALLOW_DEV_SIGNIN=1 — anyone who reaches /signin can sign in as\n" +
-        "    any user in any org with no password. Staging only. Unset it before\n" +
-        "    this deployment holds anything real.\n"
-    );
-  }
 }

@@ -64,16 +64,23 @@ The identifier is the **phone number** — what a field worker already knows, an
 phone OTP will use when it replaces the password. Nothing downstream of `SessionUser`
 changes when that happens.
 
+New accounts use an invitation instead of a temporary password. A coordinator adds
+the person, reads them the one-time code, and they open `/signup` to choose their own
+password. The code expires after seven days, locks after five wrong attempts, and is
+deleted as soon as it is used.
+
 ```bash
 npm run user list                                     # who exists, and their credential state
 npm run user add -- --phone 9876543210 --name "Anita Verma" --role coordinator --block Rampur
+npm run user invite -- --phone 9876543210             # replace an expired, unused invitation
 npm run user password -- --phone 9876543210           # issue a temporary password
 npm run user password -- --phone 9876543210 --set "one you chose"
 npm run user lock -- --phone 9876543210 [--clear]
 ```
 
-`add` and `password` print the credential once, to be read down a phone line. A
-**generated** password is temporary by construction: it arrives with
+`add` prints an activation code once. `password` is the recovery path for an existing
+account and prints its credential once, to be read down a phone line. A **generated**
+recovery password is temporary by construction: it arrives with
 `must_change_password` set, and `src/proxy.ts` holds that session on `/password`
 until the person has chosen their own. A password you pass with `--set` is treated
 as deliberate and forces nothing.
@@ -92,21 +99,42 @@ Four things worth knowing:
 - **Passwords are scrypt.** No dependency — `node:crypto` has it, and it is memory-hard.
 
 The development picker at `/signin` — sign in as anyone, no password — is still there
-and still one click. It is off in production unless `FR_ALLOW_DEV_SIGNIN=1`.
+and still one click outside production. Production refuses to start if the bypass flag
+is enabled. Set `FR_ALLOW_DEV_SIGNIN=0` locally to test the real account flow.
 
 ## Deploying
 
-`DATABASE_URL` and `FR_SESSION_SECRET` must both be set; `src/instrumentation.ts`
-refuses to start the server without them rather than letting a deployment look healthy
-until the first person tries to sign in. Generate the secret with
+`DATABASE_URL`, `FR_SESSION_SECRET`, and `FR_MEDIA_ROOT` must be set;
+`src/instrumentation.ts` refuses to start the server without them rather than letting
+a misconfigured deployment look healthy. `FR_MEDIA_ROOT` must point at durable storage
+because it holds uploaded field evidence. Generate the session secret with
 `openssl rand -base64 48`. Changing it later signs everybody out, which is the blunt
-way to revoke every session at once.
+way to revoke every session at once. `/api/health` checks database readiness for a
+load balancer without returning operational data.
+
+The repository includes a multi-stage `Dockerfile`. Build and start it with a durable
+media volume and the runtime variables:
+
+```bash
+docker build -t sarvekshan .
+docker run --rm -p 3000:3000 \
+  -e DATABASE_URL="postgres://..." \
+  -e FR_SESSION_SECRET="..." \
+  -v sarvekshan_media:/app/data \
+  sarvekshan
+```
+
+Run `npm run db:migrate` as a release step before starting the new image. The server
+also sends clickjacking, MIME-sniffing, referrer, permissions, and HSTS headers, and
+removes the framework identification header.
 
 Then create the first real account:
 
 ```bash
 npm run user add -- --phone <coordinator's number> --name "..." --role coordinator
 ```
+
+Open `/signup` and use the code printed by that command.
 
 ## The four objects
 
@@ -218,8 +246,9 @@ survival figures count only completed work.
 ```
 db/migrations/     schema and the follow-up engine
 scripts/seed.mjs   demo data with a realistic survival profile
-scripts/user.mts   accounts and credentials — the only way in for a real person
+scripts/user.mts   accounts, invitations, and credential recovery
 src/proxy.ts       holds a temporary-password session on /password
+src/app/signup/    one-time invitation activation and password setup
 src/app/PublicBoard.tsx  the signed-out landing page: school conditions, opt-in per school
 src/lib/           db, session, passwords, offline queue, survival maths, storage
 src/app/visit/     the sixty-second capture flow — the screen it all depends on

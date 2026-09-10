@@ -17,12 +17,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /**
  * The dev sign-in skips the password entirely and the picker lists every user in
  * every org. That is convenient on a laptop and a full authentication bypass
- * anywhere else, so it is off in production unless someone opts in deliberately
- * for a staging demo. Password sign-in is always available.
+ * anywhere else, so production can never enable it. Password sign-in is always
+ * available.
  */
 export function devSignInEnabled(): boolean {
-  if (process.env.FR_ALLOW_DEV_SIGNIN === "1") return true;
-  return process.env.NODE_ENV !== "production";
+  return process.env.NODE_ENV !== "production" && process.env.FR_ALLOW_DEV_SIGNIN !== "0";
 }
 
 /**

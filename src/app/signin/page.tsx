@@ -1,13 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { q } from "@/lib/db";
 import { Card, Tag } from "@/components/ui";
-import { IconChevron, IconSchool } from "@/components/icons";
+import { AuthShell } from "@/components/AuthShell";
 import { devSignInEnabled } from "@/lib/session";
 import { SignInForm } from "./SignInForm";
 
 // The gate below reads the environment, so it has to run per request. Without
 // this the page prerenders at build time and the setting is frozen into it.
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Sign in | Sarvekshan",
+  robots: { index: false, follow: false },
+};
 
 // One code per outcome rather than a message in the query string: the URL is not
 // a place to let anything choose what the page says.
@@ -44,30 +49,15 @@ export default async function SignIn({
   const notice = e ? NOTICES[e] : undefined;
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center px-4 py-10">
-      {/* the public board is the landing page; this is the way back to it */}
-      <Link
-        href="/"
-        className="mb-4 inline-flex min-h-10 items-center gap-[6px] self-start text-[12.5px] font-medium text-mute hover:text-ink"
-      >
-        <IconChevron size={13} className="rotate-180" />
-        School conditions
-      </Link>
-
-      <div className="mb-[22px] flex flex-col items-center gap-[10px] text-center">
-        <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brand text-white">
-          <IconSchool size={22} />
-        </span>
-        <div>
-          <h1 className="text-[21px] font-semibold tracking-[-0.02em]">Sarvekshan</h1>
-          <p className="text-[12.5px] text-mute">School repair register</p>
-        </div>
-      </div>
+    <AuthShell>
+      <p className="page-kicker">Team access</p>
+      <h1 className="text-[28px] font-semibold tracking-[-0.035em]">Welcome back</h1>
+      <p className="mt-2 text-[13.5px] leading-[1.55] text-mute">Sign in to record school conditions, coordinate repairs, and complete follow-up checks.</p>
 
       {notice && (
         <div
           role="alert"
-          className={`mb-[14px] rounded-[8px] border px-[13px] py-[10px] text-[12.5px] ${
+          className={`mt-5 rounded-[8px] border px-[13px] py-[10px] text-[12.5px] ${
             notice.tone === "bad"
               ? "border-bad/25 bg-bad-soft text-bad"
               : "border-hair bg-surface-2 text-body"
@@ -77,16 +67,22 @@ export default async function SignIn({
         </div>
       )}
 
-      <Card className="px-[18px] py-[20px]">
+      <div className="mt-6">
         <SignInForm />
-      </Card>
+      </div>
 
-      <p className="mt-[14px] px-1 text-center text-[12px] leading-[1.55] text-mute">
-        Forgot your password? Ask your coordinator to reset it.
+      <p className="mt-6 border-t border-hair-soft pt-5 text-center text-[12.5px] text-mute">
+        First time here? <Link href="/signup" className="font-semibold text-brand hover:underline">Activate your invitation</Link>
       </p>
 
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11.5px] text-faint">
+        <Link href="/" className="hover:text-body">View school conditions</Link>
+        <span aria-hidden>·</span>
+        <span>Forgot your password? Ask your coordinator.</span>
+      </div>
+
       {devSignInEnabled() && <DevPicker />}
-    </div>
+    </AuthShell>
   );
 }
 
@@ -117,7 +113,7 @@ async function DevPicker() {
         <Tag tone="warn">no password</Tag>
       </div>
       <p className="mb-[10px] text-[11.5px] leading-[1.5] text-faint">
-        Skips the credential entirely. Off in production unless FR_ALLOW_DEV_SIGNIN=1.
+        Skips the credential entirely. Unavailable in production; set FR_ALLOW_DEV_SIGNIN=0 to hide it locally.
       </p>
 
       <form action="/api/signin" method="post" className="flex flex-col gap-[6px]">

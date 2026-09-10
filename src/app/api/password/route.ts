@@ -49,7 +49,8 @@ export async function POST(req: Request) {
   const saved = await q1<{ pv: string }>(
     `UPDATE users
         SET password_hash = $2, password_set_at = now(), must_change_password = false,
-            failed_attempts = 0, locked_until = NULL
+            failed_attempts = 0, locked_until = NULL,
+            activated_at = COALESCE(activated_at, now())
       WHERE id = $1
       RETURNING (extract(epoch FROM password_set_at) * 1000000)::bigint::text AS pv`,
     [user.id, hash]

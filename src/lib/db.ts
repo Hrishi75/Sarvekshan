@@ -7,7 +7,15 @@ declare global {
 function makePool() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL is not set");
-  return new Pool({ connectionString, max: 10 });
+  const configured = Number(process.env.FR_DB_POOL_SIZE ?? 10);
+  const max = Number.isInteger(configured) ? Math.min(30, Math.max(1, configured)) : 10;
+  return new Pool({
+    connectionString,
+    max,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+    application_name: "sarvekshan",
+  });
 }
 
 export const pool: Pool = global.__frPool ?? makePool();

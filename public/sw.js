@@ -1,7 +1,7 @@
 /* Field Register service worker.
    App shell is cached so the capture flow opens with no network at all.
    API responses are never cached — stale school data is worse than none. */
-const CACHE = "fr-shell-v1";
+const CACHE = "fr-shell-v2";
 const SHELL = ["/", "/visit", "/checks", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {

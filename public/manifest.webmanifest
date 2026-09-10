@@ -1,10 +1,10 @@
 {
-  "name": "Field Register",
-  "short_name": "Register",
+  "name": "Sarvekshan School Repair Register",
+  "short_name": "Sarvekshan",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#EDEFF3",
-  "theme_color": "#2A4B8D",
+  "background_color": "#F6F6F4",
+  "theme_color": "#2B5CFF",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]

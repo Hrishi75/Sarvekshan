@@ -85,6 +85,35 @@ button:active { transform: translateY(1px); }
   color: var(--color-brand);
 }
 
+.auth-backdrop {
+  background-color: #F5F6FA;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgb(43 92 255 / 0.13), transparent 30rem),
+    linear-gradient(rgb(43 92 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(43 92 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+}
+
+.auth-story::after {
+  position: absolute;
+  right: -7rem;
+  bottom: -7rem;
+  width: 25rem;
+  height: 25rem;
+  border: 1px solid rgb(255 255 255 / 0.09);
+  border-radius: 999px;
+  content: "";
+}
+
+.auth-orbit {
+  position: absolute;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.auth-orbit-one { top: 7rem; right: -5rem; width: 18rem; height: 18rem; }
+.auth-orbit-two { top: 10rem; right: -2rem; width: 12rem; height: 12rem; }
+
 *:focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;

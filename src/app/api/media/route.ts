@@ -16,6 +16,19 @@ const OWNER = {
 type OwnerKind = keyof typeof OWNER;
 
 const isOwnerKind = (v: string): v is OwnerKind => Object.hasOwn(OWNER, v);
+const mediaKind = z.enum(["condition", "completion", "bill", "voice", "reference"]);
+const allowedMime = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "audio/webm",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/ogg",
+]);
+const MAX_MEDIA_BYTES = 12 * 1024 * 1024;
 
 export async function POST(req: Request) {
   const user = await currentUser();
@@ -25,15 +38,25 @@ export async function POST(req: Request) {
   const clientUuidRaw = z.uuid().safeParse(fd.get("client_uuid"));
   const ownerKindRaw = String(fd.get("owner_kind") ?? "");
   const ownerClientUuid = z.uuid().safeParse(fd.get("owner_client_uuid"));
-  const kind = String(fd.get("kind") ?? "condition");
+  const kind = mediaKind.safeParse(String(fd.get("kind") ?? "condition"));
   const capturedAt = String(fd.get("captured_at") ?? new Date().toISOString());
   const latRaw = fd.get("lat");
   const lngRaw = fd.get("lng");
   const file = fd.get("file");
+  const mime = file instanceof Blob ? file.type.split(";")[0].toLowerCase() : "";
 
   // client_uuid becomes part of the storage key, so it is validated as a uuid
   // here and never taken as free text.
-  if (!clientUuidRaw.success || !(file instanceof Blob) || !isOwnerKind(ownerKindRaw)) {
+  if (
+    !clientUuidRaw.success ||
+    !ownerClientUuid.success ||
+    !(file instanceof Blob) ||
+    !isOwnerKind(ownerKindRaw) ||
+    !kind.success ||
+    !allowedMime.has(mime) ||
+    file.size <= 0 ||
+    file.size > MAX_MEDIA_BYTES
+  ) {
     return NextResponse.json({ error: "bad payload" }, { status: 400 });
   }
   const clientUuid = clientUuidRaw.data;
@@ -42,13 +65,11 @@ export async function POST(req: Request) {
 
   // The owner id is client-supplied. Confirm it is a row in this org before
   // hanging media off it, or a caller can attach photos to another org's record.
-  if (ownerClientUuid.success) {
-    const owner = await q1<{ id: string }>(
-      `SELECT id FROM ${table} WHERE id = $1 AND org_id = $2`,
-      [ownerClientUuid.data, user.org_id]
-    );
-    if (!owner) return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
+  const owner = await q1<{ id: string }>(
+    `SELECT id FROM ${table} WHERE id = $1 AND org_id = $2`,
+    [ownerClientUuid.data, user.org_id]
+  );
+  if (!owner) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   // Already stored? A retry after a dropped response must not write twice.
   const existing = await q1<{ id: string }>(
@@ -58,7 +79,7 @@ export async function POST(req: Request) {
   if (existing) return NextResponse.json({ ok: true, id: existing.id, deduped: true });
 
   const buf = Buffer.from(await file.arrayBuffer());
-  const ext = (file.type.split("/")[1] ?? "bin").replace(/[^a-z0-9]/gi, "");
+  const ext = (mime.split("/")[1] ?? "bin").replace(/[^a-z0-9]/gi, "");
   const key = `${user.org_id}/${clientUuid}.${ext}`;
   await putObject(key, buf);
 
@@ -71,13 +92,13 @@ export async function POST(req: Request) {
     [
       user.org_id,
       key,
-      kind,
-      file.type || null,
+      kind.data,
+      mime,
       buf.byteLength,
       capturedAt,
       latRaw ? Number(latRaw) : null,
       lngRaw ? Number(lngRaw) : null,
-      ownerClientUuid.success ? ownerClientUuid.data : null,
+      ownerClientUuid.data,
       clientUuid,
     ]
   );

@@ -69,8 +69,8 @@ try {
   // One password across the demo roster, printed at the end of the run. It is
   // deliberately not must_change_password: these are shared demo logins, and a
   // forced change would mean the first person in locks everybody else out of
-  // the account. Real people get a temp password from `npm run user`, which
-  // does force it. SEED_FORCE_PASSWORD_CHANGE=1 rehearses that path.
+  // the account. Real people activate an invitation from `npm run user add`.
+  // SEED_FORCE_PASSWORD_CHANGE=1 still rehearses the recovery-password path.
   const seedPassword = process.env.SEED_PASSWORD || "sarvekshan-demo";
   const forceChange = process.env.SEED_FORCE_PASSWORD_CHANGE === "1";
   const seedPasswordHash = await hashPassword(seedPassword);
@@ -78,8 +78,8 @@ try {
   for (const [id, phone, name, role, block, local] of users) {
     await c.query(
       `INSERT INTO users (id, org_id, phone_hash, phone_last4, name, role, block, is_local_checker,
-                          password_hash, password_set_at, must_change_password)
-       VALUES ($1,$2,$3,$4,$5,$6::user_role,$7,$8,$9,now(),$10)`,
+                          password_hash, password_set_at, must_change_password, activated_at)
+       VALUES ($1,$2,$3,$4,$5,$6::user_role,$7,$8,$9,now(),$10,now())`,
       [id, orgId, hashPhone(phone), phone.slice(-4), name, role, block, local,
        seedPasswordHash, forceChange]
     );
