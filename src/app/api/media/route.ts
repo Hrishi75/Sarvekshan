@@ -1,33 +1,53 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { q1 } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import { putObject } from "@/lib/storage";
 
-const OWNER_COLUMN = {
-  observation: "observation_id",
-  check: "check_id",
-  work: "work_id",
-  photo_point: "photo_point_id",
+// Owner table per kind, so the id can be proved to belong to the caller's org
+// before it is written as a foreign key.
+const OWNER = {
+  observation: { column: "observation_id", table: "observations" },
+  check: { column: "check_id", table: "checks" },
+  work: { column: "work_id", table: "works" },
+  photo_point: { column: "photo_point_id", table: "photo_points" },
 } as const;
 
-type OwnerKind = keyof typeof OWNER_COLUMN;
+type OwnerKind = keyof typeof OWNER;
+
+const isOwnerKind = (v: string): v is OwnerKind => Object.hasOwn(OWNER, v);
 
 export async function POST(req: Request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "not signed in" }, { status: 401 });
 
   const fd = await req.formData();
-  const clientUuid = String(fd.get("client_uuid") ?? "");
-  const ownerKind = String(fd.get("owner_kind") ?? "") as OwnerKind;
-  const ownerClientUuid = String(fd.get("owner_client_uuid") ?? "");
+  const clientUuidRaw = z.uuid().safeParse(fd.get("client_uuid"));
+  const ownerKindRaw = String(fd.get("owner_kind") ?? "");
+  const ownerClientUuid = z.uuid().safeParse(fd.get("owner_client_uuid"));
   const kind = String(fd.get("kind") ?? "condition");
   const capturedAt = String(fd.get("captured_at") ?? new Date().toISOString());
   const latRaw = fd.get("lat");
   const lngRaw = fd.get("lng");
   const file = fd.get("file");
 
-  if (!clientUuid || !(file instanceof Blob) || !OWNER_COLUMN[ownerKind]) {
+  // client_uuid becomes part of the storage key, so it is validated as a uuid
+  // here and never taken as free text.
+  if (!clientUuidRaw.success || !(file instanceof Blob) || !isOwnerKind(ownerKindRaw)) {
     return NextResponse.json({ error: "bad payload" }, { status: 400 });
+  }
+  const clientUuid = clientUuidRaw.data;
+  const ownerKind: OwnerKind = ownerKindRaw;
+  const { column, table } = OWNER[ownerKind];
+
+  // The owner id is client-supplied. Confirm it is a row in this org before
+  // hanging media off it, or a caller can attach photos to another org's record.
+  if (ownerClientUuid.success) {
+    const owner = await q1<{ id: string }>(
+      `SELECT id FROM ${table} WHERE id = $1 AND org_id = $2`,
+      [ownerClientUuid.data, user.org_id]
+    );
+    if (!owner) return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
   // Already stored? A retry after a dropped response must not write twice.
@@ -42,7 +62,6 @@ export async function POST(req: Request) {
   const key = `${user.org_id}/${clientUuid}.${ext}`;
   await putObject(key, buf);
 
-  const column = OWNER_COLUMN[ownerKind];
   // observations arrive keyed by their own client_uuid, which is their id
   const row = await q1<{ id: string }>(
     `INSERT INTO media (org_id, storage_key, kind, mime, bytes, captured_at, lat, lng, ${column}, client_uuid)
@@ -58,7 +77,7 @@ export async function POST(req: Request) {
       capturedAt,
       latRaw ? Number(latRaw) : null,
       lngRaw ? Number(lngRaw) : null,
-      ownerClientUuid || null,
+      ownerClientUuid.success ? ownerClientUuid.data : null,
       clientUuid,
     ]
   );

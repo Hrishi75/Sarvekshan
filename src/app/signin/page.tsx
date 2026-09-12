@@ -1,12 +1,29 @@
 import { q } from "@/lib/db";
 import { Card, Tag } from "@/components/ui";
 import { FieldShell } from "@/components/FieldShell";
+import { devSignInEnabled } from "@/lib/session";
+
+// The gate below reads the environment, so it has to run per request. Without
+// this the page prerenders at build time and the setting is frozen into it.
+export const dynamic = "force-dynamic";
 
 /**
  * Development sign-in. P1 replaces this with phone OTP;
  * everything downstream reads the same SessionUser shape.
  */
 export default async function SignIn() {
+  // The picker is an unauthenticated roster of every user in every org. Never
+  // build that list unless the dev sign-in it feeds is actually enabled.
+  if (!devSignInEnabled()) {
+    return (
+      <FieldShell title="Sign in" subtitle="">
+        <Card className="px-4 py-3 text-sm text-mute">
+          Sign-in is not configured for this deployment.
+        </Card>
+      </FieldShell>
+    );
+  }
+
   const users = await q<{
     id: string;
     name: string;
