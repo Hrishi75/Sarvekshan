@@ -12,8 +12,11 @@ const instrument = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Sarvekshan",
-  description: "School audit — what the records claim, and what the building looks like",
+  title: "Sarvekshan | School repair evidence",
+  description:
+    "A public evidence and operations platform connecting school conditions, repair work, costs, and long-term follow-up checks.",
+  applicationName: "Sarvekshan",
+  keywords: ["school repairs", "public infrastructure", "field evidence", "repair monitoring"],
   manifest: "/manifest.webmanifest",
   // without this the browser falls back to requesting /favicon.ico, which this
   // app does not have — the icon has been an SVG since the design system landed

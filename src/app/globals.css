@@ -114,6 +114,14 @@ button:active { transform: translateY(1px); }
 .auth-orbit-one { top: 7rem; right: -5rem; width: 18rem; height: 18rem; }
 .auth-orbit-two { top: 10rem; right: -2rem; width: 12rem; height: 12rem; }
 
+.platform-hero {
+  background-image:
+    radial-gradient(circle at 82% 18%, rgb(43 92 255 / 0.32), transparent 22rem),
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px;
+}
+
 *:focus-visible {
   outline: 2px solid var(--color-brand);
   outline-offset: 2px;

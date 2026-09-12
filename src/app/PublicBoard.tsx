@@ -257,6 +257,12 @@ export async function PublicBoard({ search, block }: { search: string; block: st
           </nav>
 
           <span className="grow" />
+          <Link
+            href="/platform"
+            className="inline-flex min-h-10 shrink-0 items-center px-1 text-[12.5px] font-medium text-body hover:text-ink sm:px-2"
+          >
+            How it works
+          </Link>
           <a
             href="/signin"
             className="inline-flex min-h-10 shrink-0 items-center rounded-[7px] bg-brand px-[15px] text-[13px] font-semibold text-white"

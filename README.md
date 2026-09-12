@@ -1,11 +1,14 @@
-# Field Register
+# Sarvekshan
 
-An operations tool for a team doing repair work in village government schools.
-It records what a school needed, what was fixed, what it cost — and it is the only
-part of the process that finds out whether the repair was still working a year later.
+A public evidence and operations platform for teams repairing village government
+schools. It connects what somebody sees on site, the work the team decides to do,
+what that work costs, and whether the repair still functions months later.
 
 Built around one rule: **if it is slower than WhatsApp, it is dead.** The capture
 flow targets under sixty seconds, needs no typing, and completes with the network off.
+
+The complete product contract — users, records, workflow, evidence rules, measures,
+and boundaries — is in [`docs/platform-definition.md`](docs/platform-definition.md).
 
 ## Run it
 
@@ -249,7 +252,9 @@ scripts/seed.mjs   demo data with a realistic survival profile
 scripts/user.mts   accounts, invitations, and credential recovery
 src/proxy.ts       holds a temporary-password session on /password
 src/app/signup/    one-time invitation activation and password setup
+src/app/platform/  public explanation of the product and evidence model
 src/app/PublicBoard.tsx  the signed-out landing page: school conditions, opt-in per school
+docs/platform-definition.md  product scope, users, workflow, measures, and boundaries
 src/lib/           db, session, passwords, offline queue, survival maths, storage
 src/app/visit/     the sixty-second capture flow — the screen it all depends on
 src/app/checks/    follow-up checks, and completing one
