@@ -28,6 +28,18 @@ export function register() {
     );
   }
 
+  const phonePepper = process.env.FR_PHONE_PEPPER;
+  if (!phonePepper) {
+    problems.push(
+      "FR_PHONE_PEPPER is not set. It protects phone numbers if the database is exposed.\n" +
+        "  Generate one:  openssl rand -base64 48"
+    );
+  } else if (phonePepper.length < 32) {
+    problems.push(
+      `FR_PHONE_PEPPER is ${phonePepper.length} characters. Use at least 32:  openssl rand -base64 48`
+    );
+  }
+
   if (!process.env.DATABASE_URL) {
     problems.push("DATABASE_URL is not set. Nothing can be read or written without it.");
   }

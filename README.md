@@ -107,7 +107,7 @@ is enabled. Set `FR_ALLOW_DEV_SIGNIN=0` locally to test the real account flow.
 
 ## Deploying
 
-`DATABASE_URL`, `FR_SESSION_SECRET`, and `FR_MEDIA_ROOT` must be set;
+`DATABASE_URL`, `FR_SESSION_SECRET`, `FR_PHONE_PEPPER`, and `FR_MEDIA_ROOT` must be set;
 `src/instrumentation.ts` refuses to start the server without them rather than letting
 a misconfigured deployment look healthy. `FR_MEDIA_ROOT` must point at durable storage
 because it holds uploaded field evidence. Generate the session secret with
@@ -116,13 +116,15 @@ way to revoke every session at once. `/api/health` checks database readiness for
 load balancer without returning operational data.
 
 The repository includes a multi-stage `Dockerfile`. Build and start it with a durable
-media volume and the runtime variables:
+media volume and the runtime variables. Generate separate values for the session
+secret and phone pepper with `openssl rand -base64 48`:
 
 ```bash
 docker build -t sarvekshan .
 docker run --rm -p 3000:3000 \
   -e DATABASE_URL="postgres://..." \
   -e FR_SESSION_SECRET="..." \
+  -e FR_PHONE_PEPPER="..." \
   -v sarvekshan_media:/app/data \
   sarvekshan
 ```
