@@ -92,4 +92,4 @@ New features should be rejected when they require identifiable child data, weake
 
 ## Release contract
 
-A production release must keep the capture flow functional offline, apply database migrations before serving traffic, use a durable media volume, reject the development sign-in bypass, protect session and invitation secrets, pass `npm run check` and `npm run build`, and return a healthy database readiness response from `/api/health`.
+A production release must keep the capture flow functional offline, apply database migrations before serving traffic, use a durable media volume, reject the development sign-in bypass, protect session, invitation, and phone-hash secrets, pass `npm run check` and `npm run build`, and return a healthy database readiness response from `/api/health`.

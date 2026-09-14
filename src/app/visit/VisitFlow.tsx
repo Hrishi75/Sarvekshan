@@ -301,7 +301,7 @@ export function VisitFlow({ facilities, initialSchool = null }: { facilities: Fa
           <StepTitle
             n={4}
             title="Photo and voice note"
-            hint="Both optional — but the voice note is the useful one"
+            hint="Optional. Keep people out of frame and do not record children's names."
           />
 
           <label className="tap flex cursor-pointer items-center justify-center gap-2 rounded border-2 border-dashed border-brand/30 bg-surface font-semibold text-brand">
@@ -341,6 +341,7 @@ export function VisitFlow({ facilities, initialSchool = null }: { facilities: Fa
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={2}
+            maxLength={1000}
             placeholder="Type only if you want to (optional)"
             className="w-full rounded border border-hair bg-surface px-3 py-2 text-sm"
           />
