@@ -101,6 +101,34 @@ Four things worth knowing:
   IP: a village shares one tower.
 - **Passwords are scrypt.** No dependency — `node:crypto` has it, and it is memory-hard.
 
+### Managing the team
+
+Open **Team** from the desk menu to invite people and manage their access. Coordinators
+can manage volunteers; admins can also invite and manage coordinators. Admin accounts
+remain provisioned through the CLI. You cannot change your own access on this page.
+
+The roster shows masked phone numbers, blocks, local-checker status, and whether an
+account is awaiting activation, locked, using a temporary password, or deactivated.
+Search by name, block, or the last four phone digits, and filter by account status.
+
+- **Invite member** creates a seven-day, one-time activation code. Share it directly;
+  the app does not send a message automatically. The person chooses their password at `/signup`.
+- **Renew invitation** replaces an unused code and clears its attempt lock.
+- **Temporary password** recovers an activated account, signs out its previous sessions,
+  and requires a password change on the next sign-in.
+- **Deactivate** removes access while preserving attribution and assigned work. The
+  confirmation shows outstanding repairs and checks so the coordinator can review them.
+- **Reactivate** issues a fresh invitation or temporary password. Old sessions stay revoked.
+
+Codes and temporary passwords are shown only in the result of the action and are not
+retrievable later. Team administration requires a connection and is excluded from the
+service-worker cache. Concurrent or retried changes from a stale roster are rejected.
+Behind a reverse proxy, forward the public host and protocol in `X-Forwarded-Host`
+and `X-Forwarded-Proto`, overwriting incoming client values, so origin checks match
+the address used in the browser.
+Run `npm run test:team` against a migrated database for the permission and credential
+lifecycle tests; all fixtures are rolled back.
+
 The development picker at `/signin` — sign in as anyone, no password — is still there
 and still one click outside production. Production refuses to start if the bypass flag
 is enabled. Set `FR_ALLOW_DEV_SIGNIN=0` locally to test the real account flow.
@@ -240,9 +268,8 @@ survival figures count only completed work.
 ## What is not built yet
 
 - Phone OTP (password sign-in is in place; see **Signing in** above)
-- Self-service password recovery — today a coordinator issues a new one with
-  `npm run user password`, which is the right shape for a programme this size
-  but does not scale past one
+- Self-service password recovery — today a coordinator issues a temporary password
+  from **Team** or with `npm run user password`
 - WhatsApp reminders and the intake bot — start the Business API application early,
   template approval is slow and sits on the critical path
 - The ghost-overlay camera for repeat photography (`photo_points` schema is in place;

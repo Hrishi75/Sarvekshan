@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/lib/*.test.ts",
     "test:auth": "node --import tsx --test scripts/test-auth.mts",
+    "test:team": "node --import tsx --test scripts/test-team.mts",
     "check": "npm run lint && npm run typecheck && npm test",
     "test:repairs": "node --import tsx --test scripts/test-repairs.mts",
     "db:migrate": "for f in db/migrations/*.sql; do echo \"-- $f\"; psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -q -f \"$f\"; done",

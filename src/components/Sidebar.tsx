@@ -13,6 +13,7 @@ import {
   IconSignOut,
   IconRepair,
   IconMenu,
+  IconTeam,
 } from "./icons";
 
 type Nav = { href: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
@@ -43,6 +44,7 @@ export function Sidebar({
     },
     { href: "/survival", label: "Survival", icon: <IconCheckList size={16} /> },
     { href: "/grants", label: "Grants", icon: <IconGrant size={16} /> },
+    ...(user.role === "volunteer" ? [] : [{ href: "/team", label: "Team", icon: <IconTeam size={16} /> }]),
   ];
 
   const field: Nav[] = [
