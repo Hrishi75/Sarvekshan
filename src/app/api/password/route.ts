@@ -48,13 +48,20 @@ export async function POST(req: Request) {
   const hash = await hashPassword(next);
   const saved = await q1<{ pv: string }>(
     `UPDATE users
-        SET password_hash = $2, password_set_at = now(), must_change_password = false,
-            failed_attempts = 0, locked_until = NULL
-      WHERE id = $1
+        SET password_hash = $2,
+            password_set_at = GREATEST(clock_timestamp(), password_set_at + interval '1 microsecond'),
+            must_change_password = false,
+            failed_attempts = 0, locked_until = NULL,
+            activated_at = COALESCE(activated_at, now()),
+            invitation_code_hash = NULL, invitation_expires_at = NULL,
+            invitation_attempts = 0, invitation_locked_until = NULL
+      WHERE id = $1 AND active AND password_hash IS NOT DISTINCT FROM $3
       RETURNING (extract(epoch FROM password_set_at) * 1000000)::bigint::text AS pv`,
-    [user.id, hash]
+    [user.id, hash, row.password_hash]
   );
-  if (!saved) return back(req, "weak");
+  // A coordinator may have reset or deactivated this account while password
+  // verification was running. Never overwrite that newer credential decision.
+  if (!saved) return NextResponse.redirect(new URL("/signin", req.url), { status: 303 });
 
   // password_set_at is the session version, so every cookie signed before this
   // moment is now dead — including the one this request arrived on. Re-issue it.

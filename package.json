@@ -1,14 +1,17 @@
 {
-  "name": "field-register",
+  "name": "sarvekshan",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/lib/*.test.ts",
+    "test:auth": "node --import tsx --test scripts/test-auth.mts",
+    "test:team": "node --import tsx --test scripts/test-team.mts",
+    "check": "npm run lint && npm run typecheck && npm test",
     "test:repairs": "node --import tsx --test scripts/test-repairs.mts",
     "db:migrate": "for f in db/migrations/*.sql; do echo \"-- $f\"; psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -q -f \"$f\"; done",
     "db:reset": "dropdb --if-exists field_register && createdb field_register && npm run db:migrate && npm run seed",
@@ -17,7 +20,7 @@
   },
   "dependencies": {
     "dexie": "^4.4.5",
-    "next": "16.3.2",
+    "next": "16.3.5",
     "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -30,7 +33,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.2",
+    "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
     "typescript": "^5"

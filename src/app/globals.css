@@ -39,13 +39,29 @@
 }
 
 html, body { height: 100%; }
+html { scroll-behavior: smooth; }
 body {
-  background: var(--color-canvas);
+  background:
+    linear-gradient(180deg, #F9F9F7 0, var(--color-canvas) 240px);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.005em;
 }
+
+::selection {
+  background: var(--color-brand-soft);
+  color: var(--color-ink);
+}
+
+a, button, input, select, textarea {
+  transition-duration: 150ms;
+  transition-property: background-color, border-color, color, opacity, transform;
+  transition-timing-function: ease-out;
+}
+
+button, summary, a { -webkit-tap-highlight-color: transparent; }
+button:active { transform: translateY(1px); }
 
 /* every number in this product is tabular */
 .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -57,6 +73,53 @@ body {
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--color-faint);
+}
+
+.page-kicker {
+  margin-bottom: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-brand);
+}
+
+.auth-backdrop {
+  background-color: #F5F6FA;
+  background-image:
+    radial-gradient(circle at 12% 8%, rgb(43 92 255 / 0.13), transparent 30rem),
+    linear-gradient(rgb(43 92 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(43 92 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
+}
+
+.auth-story::after {
+  position: absolute;
+  right: -7rem;
+  bottom: -7rem;
+  width: 25rem;
+  height: 25rem;
+  border: 1px solid rgb(255 255 255 / 0.09);
+  border-radius: 999px;
+  content: "";
+}
+
+.auth-orbit {
+  position: absolute;
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: 999px;
+  pointer-events: none;
+}
+.auth-orbit-one { top: 7rem; right: -5rem; width: 18rem; height: 18rem; }
+.auth-orbit-two { top: 10rem; right: -2rem; width: 12rem; height: 12rem; }
+
+.platform-hero {
+  background-image:
+    radial-gradient(circle at 82% 18%, rgb(43 92 255 / 0.32), transparent 22rem),
+    linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+  background-size: auto, 40px 40px, 40px 40px;
 }
 
 *:focus-visible {

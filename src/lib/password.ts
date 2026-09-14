@@ -1,5 +1,6 @@
 import {
   createHash,
+  createHmac,
   randomBytes,
   randomInt,
   scrypt as scryptCb,
@@ -53,9 +54,31 @@ export async function burnVerify(password: string): Promise<false> {
   return false;
 }
 
-/** The phone as it is stored — sha256, same as the seed has always used. */
+function phonePepper(): string {
+  const pepper = process.env.FR_PHONE_PEPPER;
+  if (pepper && pepper.length >= 32) return pepper;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("FR_PHONE_PEPPER must be set to at least 32 characters in production.");
+  }
+  if (pepper) throw new Error("FR_PHONE_PEPPER is set but shorter than 32 characters.");
+  return "dev-only-phone-pepper-not-for-deployment";
+}
+
+/** A keyed digest keeps phone numbers impractical to recover from a database leak. */
 export function hashPhone(phone: string): string {
+  return createHmac("sha256", phonePepper()).update(normalisePhone(phone)).digest("hex");
+}
+
+/**
+ * Existing deployments used an unkeyed digest. Accept it only while locating an
+ * account, then replace it with hashPhone() after the user proves the number.
+ */
+export function legacyHashPhone(phone: string): string {
   return createHash("sha256").update(normalisePhone(phone)).digest("hex");
+}
+
+export function phoneHashCandidates(phone: string): string[] {
+  return [hashPhone(phone), legacyHashPhone(phone)];
 }
 
 /**

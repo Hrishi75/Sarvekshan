@@ -47,7 +47,16 @@ function fill(score: number | null): string {
  * evidence is drawn hollow. It is not given a colour it has not earned: an
  * unvisited school has to read as a hole in the map, because that is what it is.
  */
-export function DistrictMap({ schools }: { schools: MapSchool[] }) {
+export function DistrictMap({
+  schools,
+  target = "page",
+}: {
+  schools: MapSchool[];
+  /** Where a pin goes. The public board has no school page to send anyone to, so
+   *  it scrolls to the school's own card further down the same page instead. A
+   *  plain string rather than a callback: a server component renders this. */
+  target?: "page" | "anchor";
+}) {
   const router = useRouter();
   const [hover, setHover] = useState<MapSchool | null>(null);
 
@@ -228,7 +237,13 @@ export function DistrictMap({ schools }: { schools: MapSchool[] }) {
                 key={s.id}
                 onMouseEnter={() => setHover(s)}
                 onMouseLeave={() => setHover((h) => (h?.id === s.id ? null : h))}
-                onClick={() => router.push(`/schools/${s.id}`)}
+                onClick={() => {
+                  if (target === "anchor") {
+                    document.getElementById(`school-${s.id}`)?.scrollIntoView({ block: "center" });
+                  } else {
+                    router.push(`/schools/${s.id}`);
+                  }
+                }}
                 style={{
                   cursor: "pointer",
                   transformOrigin: `${geo.px(s.lng)}px ${geo.py(s.lat)}px`,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { q1 } from "@/lib/db";
 import { Card } from "@/components/ui";
@@ -7,6 +8,10 @@ import { currentUser, sessionMustChangePassword } from "@/lib/session";
 import { PasswordForm } from "./PasswordForm";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Password | Sarvekshan",
+  robots: { index: false, follow: false },
+};
 
 const NOTICES: Record<string, { tone: "bad" | "good"; message: string }> = {
   "wrong-current": {
@@ -54,20 +59,21 @@ export default async function PasswordPage({
   );
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[420px] flex-col justify-center px-4 py-10">
-      <div className="mb-[20px] flex flex-col items-center gap-[10px] text-center">
-        <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brand-soft text-brand">
-          <IconLock size={21} />
-        </span>
-        <div>
-          <h1 className="text-[19px] font-semibold tracking-[-0.02em]">
-            {forced ? "Choose your password" : "Change your password"}
-          </h1>
-          <p className="text-[12.5px] text-mute">
-            {user.name}
-          </p>
+    <div className="auth-backdrop min-h-screen px-4 py-10">
+      <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-[420px] flex-col justify-center">
+        <div className="mb-[20px] flex flex-col items-center gap-[10px] text-center">
+          <span className="flex h-[42px] w-[42px] items-center justify-center rounded-[11px] bg-brand-soft text-brand">
+            <IconLock size={21} />
+          </span>
+          <div>
+            <h1 className="text-[19px] font-semibold tracking-[-0.02em]">
+              {forced ? "Choose your password" : "Change your password"}
+            </h1>
+            <p className="text-[12.5px] text-mute">
+              {user.name}
+            </p>
+          </div>
         </div>
-      </div>
 
       {forced && !notice && (
         <div className="mb-[14px] rounded-[8px] border border-warn/25 bg-warn-soft px-[13px] py-[10px] text-[12.5px] text-warn">
@@ -112,6 +118,7 @@ export default async function PasswordPage({
           )}
         </>
       )}
+      </div>
     </div>
   );
 }

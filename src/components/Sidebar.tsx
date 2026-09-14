@@ -13,6 +13,7 @@ import {
   IconSignOut,
   IconRepair,
   IconMenu,
+  IconTeam,
 } from "./icons";
 
 type Nav = { href: string; label: string; icon: ReactNode; count?: number; alert?: boolean };
@@ -43,6 +44,7 @@ export function Sidebar({
     },
     { href: "/survival", label: "Survival", icon: <IconCheckList size={16} /> },
     { href: "/grants", label: "Grants", icon: <IconGrant size={16} /> },
+    ...(user.role === "volunteer" ? [] : [{ href: "/team", label: "Team", icon: <IconTeam size={16} /> }]),
   ];
 
   const field: Nav[] = [
@@ -77,10 +79,10 @@ export function Sidebar({
         href={n.href}
         aria-current={active ? "page" : undefined}
         onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}
-        className={`flex min-h-11 items-center gap-[10px] rounded-[6px] px-[9px] text-[13.5px] md:min-h-[34px] ${
+        className={`relative flex min-h-11 items-center gap-[10px] rounded-[7px] px-[10px] text-[13.5px] md:min-h-[36px] ${
           active
-            ? "bg-brand-soft font-semibold text-brand"
-            : "font-medium text-body hover:bg-surface-2"
+            ? "bg-brand-soft font-semibold text-brand before:absolute before:inset-y-[8px] before:left-0 before:w-[3px] before:rounded-r-full before:bg-brand"
+            : "font-medium text-body hover:bg-surface-2 hover:text-ink"
         }`}
       >
         {n.icon}
@@ -101,11 +103,11 @@ export function Sidebar({
   }
 
   return (<>
-    <div className="shrink-0 border-b border-hair bg-surface px-4 py-3 md:hidden">
+    <div className="relative z-30 shrink-0 border-b border-hair bg-surface px-4 py-3 md:hidden">
       <details>
         <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-semibold">
-          <span className="flex items-center gap-2"><IconSchool size={18} className="text-brand" />Sarvekshan</span>
-          <span className="flex items-center gap-2 rounded-[6px] border border-hair px-3 py-2 text-[12px] text-body">Menu <IconMenu size={14} /></span>
+          <span className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-brand text-white"><IconSchool size={17} /></span>Sarvekshan</span>
+          <span className="flex items-center gap-2 rounded-[7px] border border-hair bg-surface-2 px-3 py-2 text-[12px] text-body">Menu <IconMenu size={14} /></span>
         </summary>
         <nav aria-label="Mobile navigation" className="mt-3 grid max-h-[50dvh] grid-cols-2 gap-2 overflow-y-auto pb-2">
           {[...desk, ...field].map((n) => <Item key={n.href} n={n} />)}
@@ -114,12 +116,15 @@ export function Sidebar({
         </nav>
       </details>
     </div>
-    <aside className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r border-hair bg-surface md:flex">
-      <Link href="/" className="flex items-center gap-[9px] px-[18px] pb-[20px] pt-[18px]">
-        <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[7px] bg-brand text-white">
-          <IconSchool size={15} />
+    <aside className="hidden w-[240px] shrink-0 flex-col overflow-y-auto border-r border-hair bg-surface md:flex">
+      <Link href="/" className="mb-[18px] flex items-center gap-[10px] border-b border-hair-soft px-[18px] py-[16px]">
+        <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-brand text-white">
+          <IconSchool size={16} />
         </span>
-        <span className="text-[15px] font-semibold tracking-[-0.015em]">Sarvekshan</span>
+        <span>
+          <span className="block text-[15px] font-semibold tracking-[-0.015em]">Sarvekshan</span>
+          <span className="mt-px block text-[10.5px] text-faint">School repair register</span>
+        </span>
       </Link>
 
       <div className="eyebrow mx-[18px] mb-[8px]">Desk</div>
@@ -144,7 +149,7 @@ export function Sidebar({
               <Link
                 key={b.block}
                 href={`/schools?block=${encodeURIComponent(b.block)}`}
-                className="flex h-[31px] items-center gap-[9px] rounded-[6px] px-[9px] text-[13px] text-body hover:bg-surface-2"
+                className="flex h-[33px] items-center gap-[9px] rounded-[7px] px-[10px] text-[13px] text-body hover:bg-surface-2 hover:text-ink"
               >
                 <span
                   className={`h-[7px] w-[7px] shrink-0 rounded-[2px] ${
@@ -166,7 +171,7 @@ export function Sidebar({
       )}
 
       <div className="grow" />
-      <div className="sticky bottom-0 flex items-center gap-[6px] border-t border-hair-soft bg-surface px-[10px] py-[10px]">
+      <div className="sticky bottom-0 flex items-center gap-[6px] border-t border-hair-soft bg-surface px-[10px] py-[11px]">
         <Link
           href="/password"
           title="Change password"

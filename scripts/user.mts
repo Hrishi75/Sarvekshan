@@ -4,6 +4,7 @@
  *
  *   npm run user list
  *   npm run user add -- --phone 9876543210 --name "Anita Verma" --role coordinator --block Rampur
+ *   npm run user invite -- --phone 9876543210
  *   npm run user password -- --phone 9876543210
  *   npm run user password -- --phone 9876543210 --set "a password you chose"
  *   npm run user lock -- --phone 9876543210 --clear
@@ -13,25 +14,32 @@
  */
 import { readFileSync } from "node:fs";
 import { Pool } from "pg";
-import { generateTempPassword, hashPassword, hashPhone, isValidPhone, normalisePhone } from "@/lib/password";
+import {
+  generateTempPassword,
+  hashPassword,
+  hashPhone,
+  isValidPhone,
+  normalisePhone,
+  phoneHashCandidates,
+} from "@/lib/password";
 import { passwordProblem } from "@/lib/password-rules";
+import {
+  generateInvitationCode,
+  hashInvitationCode,
+  INVITATION_TTL_DAYS,
+} from "@/lib/invitation";
 
-// .env.local for a laptop; real environment variables everywhere else.
-function connectionString(): string {
-  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
-  try {
-    const env = Object.fromEntries(
-      readFileSync(new URL("../.env.local", import.meta.url), "utf8")
-        .split("\n")
-        .filter(Boolean)
-        .map((l) => l.split(/=([\s\S]*)/).slice(0, 2))
-    );
-    if (env.DATABASE_URL) return env.DATABASE_URL;
-  } catch {
-    /* no .env.local — that is normal in production */
+// Load the values this CLI uses from .env.local on a laptop. Runtime
+// variables win in deployment and are never printed.
+try {
+  for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split("\n")) {
+    const match = line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/);
+    if (match && process.env[match[1]] === undefined) process.env[match[1]] = match[2];
   }
-  throw new Error("DATABASE_URL is not set and .env.local has no DATABASE_URL.");
+} catch {
+  /* no .env.local — normal in production */
 }
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set.");
 
 const argv = process.argv.slice(2);
 const verb = argv[0];
@@ -41,7 +49,7 @@ const flag = (name: string): string | undefined => {
 };
 const has = (name: string) => argv.includes(`--${name}`);
 
-const pool = new Pool({ connectionString: connectionString() });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const rule = "─".repeat(64);
 
 function die(msg: string): never {
@@ -62,10 +70,21 @@ function banner(name: string, phone: string, password: string, temp: boolean) {
   console.log(`${rule}\n`);
 }
 
+function invitationBanner(name: string, phone: string, code: string) {
+  console.log(`\n${rule}`);
+  console.log(`  ${name}`);
+  console.log(`  phone       ${phone}`);
+  console.log(`  invite code ${code}`);
+  console.log(`  open        /signup`);
+  console.log(`  Expires in ${INVITATION_TTL_DAYS} days and can be used once.`);
+  console.log(`${rule}\n`);
+}
+
 async function list() {
   const { rows } = await pool.query(
     `SELECT u.name, u.role, u.block, u.phone_last4, u.is_local_checker, o.name AS org,
             (u.password_hash IS NOT NULL) AS has_password, u.must_change_password,
+            (u.invitation_code_hash IS NOT NULL AND u.invitation_expires_at > now()) AS invited,
             (u.locked_until IS NOT NULL AND u.locked_until > now()) AS locked,
             u.last_login_at, u.active
        FROM users u JOIN orgs o ON o.id = u.org_id
@@ -77,7 +96,7 @@ async function list() {
   console.log(`  ${rule}`);
   for (const r of rows) {
     const state = !r.has_password
-      ? "no password set"
+      ? r.invited ? "invited · awaiting activation" : "not activated"
       : r.locked
         ? "LOCKED"
         : r.must_change_password
@@ -104,6 +123,7 @@ async function add() {
   }
 
   const phone = normalisePhone(phoneIn);
+  const phoneHashes = phoneHashCandidates(phone);
   let orgId = flag("org");
   if (!orgId) {
     const { rows } = await pool.query(`SELECT id, name FROM orgs ORDER BY name`);
@@ -114,23 +134,69 @@ async function add() {
     orgId = rows[0].id;
   }
 
-  const password = flag("set") ?? generateTempPassword();
-  const temp = !flag("set");
-  const problem = passwordProblem(password);
-  if (problem) die(problem);
+  const chosenPassword = flag("set");
+  if (chosenPassword) {
+    const problem = passwordProblem(chosenPassword);
+    if (problem) die(problem);
+  }
+  const invitation = chosenPassword ? null : generateInvitationCode();
+
+  const { rows: existing } = await pool.query(
+    `SELECT id FROM users WHERE org_id=$1 AND phone_hash=ANY($2::text[])`,
+    [orgId, phoneHashes]
+  );
+  if (existing.length > 0) die("Somebody in that org already uses that number.");
 
   const { rows } = await pool.query(
     `INSERT INTO users (org_id, phone_hash, phone_last4, name, role, block, is_local_checker,
-                        password_hash, password_set_at, must_change_password)
-     VALUES ($1,$2,$3,$4,$5::user_role,$6,$7,$8,now(),$9)
+                        password_hash, password_set_at, must_change_password, activated_at,
+                        invitation_code_hash, invitation_expires_at)
+     VALUES ($1,$2,$3,$4,$5::user_role,$6,$7,$8,
+             CASE WHEN $8::text IS NULL THEN NULL ELSE now() END, false,
+             CASE WHEN $8::text IS NULL THEN NULL ELSE now() END,
+             $9, CASE WHEN $9::text IS NULL THEN NULL ELSE now() + ($10::int * interval '1 day') END)
      ON CONFLICT (org_id, phone_hash) DO NOTHING
      RETURNING name`,
-    [orgId, hashPhone(phone), phone.slice(-4), name, role, block, has("local-checker"),
-     await hashPassword(password), temp]
+    [orgId, phoneHashes[0], phone.slice(-4), name, role, block, has("local-checker"),
+     chosenPassword ? await hashPassword(chosenPassword) : null,
+     invitation ? hashInvitationCode(invitation) : null, INVITATION_TTL_DAYS]
   );
   if (rows.length === 0) die("Somebody in that org already uses that number.");
 
-  banner(`${name} — ${role}`, phone, password, temp);
+  if (invitation) invitationBanner(`${name} — ${role}`, phone, invitation);
+  else banner(`${name} — ${role}`, phone, chosenPassword!, false);
+}
+
+async function invite() {
+  const phoneIn = flag("phone") ?? die("invite needs --phone");
+  if (!isValidPhone(phoneIn)) die(`"${phoneIn}" is not a ten-digit Indian mobile number.`);
+  const phone = normalisePhone(phoneIn);
+  const orgId = flag("org");
+  const { rows: candidates } = await pool.query(
+    `SELECT u.id, u.name, u.role, o.name AS org
+       FROM users u JOIN orgs o ON o.id=u.org_id
+      WHERE u.phone_hash=ANY($1::text[]) AND u.active AND u.password_hash IS NULL
+        AND ($2::uuid IS NULL OR u.org_id=$2)`,
+    [phoneHashCandidates(phone), orgId ?? null]
+  );
+  if (candidates.length === 0) {
+    die("No inactive account has that number. Add the user first, or use the password command for recovery.");
+  }
+  if (candidates.length > 1) {
+    die(`That number belongs to more than one organisation. Pass --org:\n  ${candidates.map((row) => `${row.id}  ${row.org}`).join("\n  ")}`);
+  }
+
+  const code = generateInvitationCode();
+  const { rows } = await pool.query(
+    `UPDATE users
+        SET phone_hash = $4, invitation_code_hash = $2,
+            invitation_expires_at = now() + ($3::int * interval '1 day'),
+            invitation_attempts = 0, invitation_locked_until = NULL
+      WHERE id = $1
+      RETURNING name, role`,
+    [candidates[0].id, hashInvitationCode(code), INVITATION_TTL_DAYS, hashPhone(phone)]
+  );
+  for (const row of rows) invitationBanner(`${row.name} — ${row.role}`, phone, code);
 }
 
 async function password() {
@@ -149,11 +215,14 @@ async function password() {
   // every device that was signed in as this person is signed out by this.
   const { rows } = await pool.query(
     `UPDATE users
-        SET password_hash = $2, password_set_at = now(), must_change_password = $3,
-            failed_attempts = 0, locked_until = NULL, phone_last4 = $4
-      WHERE phone_hash = $1 AND active
+        SET phone_hash = $5, password_hash = $2, password_set_at = now(), must_change_password = $3,
+            failed_attempts = 0, locked_until = NULL, phone_last4 = $4,
+            activated_at = CASE WHEN $3 THEN activated_at ELSE COALESCE(activated_at, now()) END,
+            invitation_code_hash = NULL, invitation_expires_at = NULL,
+            invitation_attempts = 0, invitation_locked_until = NULL
+      WHERE phone_hash = ANY($1::text[]) AND active
       RETURNING name, role`,
-    [hashPhone(phone), await hashPassword(value), temp, phone.slice(-4)]
+    [phoneHashCandidates(phone), await hashPassword(value), temp, phone.slice(-4), hashPhone(phone)]
   );
   if (rows.length === 0) die("No active user has that number. Try: npm run user list");
 
@@ -167,17 +236,17 @@ async function lock() {
   const clear = has("clear");
   const { rows } = await pool.query(
     clear
-      ? `UPDATE users SET failed_attempts = 0, locked_until = NULL
-          WHERE phone_hash = $1 AND active RETURNING name`
-      : `UPDATE users SET locked_until = now() + interval '100 years'
-          WHERE phone_hash = $1 AND active RETURNING name`,
-    [hashPhone(phone)]
+      ? `UPDATE users SET phone_hash = $2, failed_attempts = 0, locked_until = NULL
+          WHERE phone_hash = ANY($1::text[]) AND active RETURNING name`
+      : `UPDATE users SET phone_hash = $2, locked_until = now() + interval '100 years'
+          WHERE phone_hash = ANY($1::text[]) AND active RETURNING name`,
+    [phoneHashCandidates(phone), hashPhone(phone)]
   );
   if (rows.length === 0) die("No active user has that number.");
   console.log(`\n  ${rows.map((r) => r.name).join(", ")} — ${clear ? "unlocked" : "locked out"}.\n`);
 }
 
-const VERBS: Record<string, () => Promise<void>> = { list, add, password, lock };
+const VERBS: Record<string, () => Promise<void>> = { list, add, invite, password, lock };
 
 try {
   const run = verb ? VERBS[verb] : undefined;
@@ -185,6 +254,7 @@ try {
     console.log(`
   npm run user list
   npm run user add      -- --phone 9876543210 --name "Anita Verma" --role coordinator [--block Rampur] [--local-checker]
+  npm run user invite   -- --phone 9876543210 [--org uuid]
   npm run user password -- --phone 9876543210 [--set "chosen password"] [--force-change | --no-force-change]
   npm run user lock     -- --phone 9876543210 [--clear]
 `);

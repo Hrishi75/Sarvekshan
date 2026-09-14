@@ -28,8 +28,32 @@ export function register() {
     );
   }
 
+  const phonePepper = process.env.FR_PHONE_PEPPER;
+  if (!phonePepper) {
+    problems.push(
+      "FR_PHONE_PEPPER is not set. It protects phone numbers if the database is exposed.\n" +
+        "  Generate one:  openssl rand -base64 48"
+    );
+  } else if (phonePepper.length < 32) {
+    problems.push(
+      `FR_PHONE_PEPPER is ${phonePepper.length} characters. Use at least 32:  openssl rand -base64 48`
+    );
+  }
+
   if (!process.env.DATABASE_URL) {
     problems.push("DATABASE_URL is not set. Nothing can be read or written without it.");
+  }
+
+  if (!process.env.FR_MEDIA_ROOT) {
+    problems.push(
+      "FR_MEDIA_ROOT is not set. Uploaded evidence needs a durable directory mounted into the server."
+    );
+  }
+
+  if (process.env.FR_ALLOW_DEV_SIGNIN === "1") {
+    problems.push(
+      "FR_ALLOW_DEV_SIGNIN cannot be enabled in production because it bypasses every credential."
+    );
   }
 
   if (problems.length > 0) {
@@ -38,11 +62,4 @@ export function register() {
     );
   }
 
-  if (process.env.FR_ALLOW_DEV_SIGNIN === "1") {
-    console.warn(
-      "\n  ⚠ FR_ALLOW_DEV_SIGNIN=1 — anyone who reaches /signin can sign in as\n" +
-        "    any user in any org with no password. Staging only. Unset it before\n" +
-        "    this deployment holds anything real.\n"
-    );
-  }
 }

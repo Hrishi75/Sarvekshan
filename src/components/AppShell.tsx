@@ -61,13 +61,13 @@ export async function AppShell({
       />
 
       <div className="flex min-w-0 grow flex-col">
-        <header className="flex h-[56px] shrink-0 items-center gap-3 border-b border-hair bg-surface px-4 sm:px-6">
+        <header className="relative z-20 flex h-[58px] shrink-0 items-center gap-3 border-b border-hair bg-surface/95 px-4 backdrop-blur-sm sm:px-6">
           <CommandPalette />
           <div className="grow" />
           {actions ?? (
             <a
               href="/visit"
-              className="inline-flex min-h-10 shrink-0 items-center gap-[7px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white"
+              className="inline-flex min-h-10 shrink-0 items-center gap-[7px] rounded-[8px] bg-brand px-[14px] text-[13px] font-semibold text-white hover:opacity-90"
             >
               <IconPlus size={14} />
               New audit
@@ -75,7 +75,7 @@ export async function AppShell({
           )}
         </header>
 
-        <main className="min-h-0 grow overflow-y-auto">{children}</main>
+        <main className="min-h-0 grow overflow-y-auto bg-canvas">{children}</main>
       </div>
     </div>
   );

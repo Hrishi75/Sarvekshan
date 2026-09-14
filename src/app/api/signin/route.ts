@@ -8,7 +8,7 @@ import {
   newSessionToken,
   devSignInEnabled,
 } from "@/lib/session";
-import { burnVerify, hashPhone, normalisePhone, verifyPassword } from "@/lib/password";
+import { burnVerify, hashPhone, normalisePhone, phoneHashCandidates, verifyPassword } from "@/lib/password";
 
 // Online guessing against a four-digit-ish temp password is the attack this
 // actually faces. Lock the account, not the IP: a village shares one tower and
@@ -79,8 +79,8 @@ export async function POST(req: Request) {
     `SELECT id, password_hash, must_change_password,
             COALESCE(extract(epoch FROM password_set_at) * 1000000, 0)::bigint::text AS pv,
             (locked_until IS NOT NULL AND locked_until > now()) AS locked
-       FROM users WHERE phone_hash = $1 AND active`,
-    [hashPhone(phone)]
+       FROM users WHERE phone_hash = ANY($1::text[]) AND active`,
+    [phoneHashCandidates(phone)]
   );
 
   // An unknown number has to cost what a known one costs, or the response time
@@ -96,9 +96,9 @@ export async function POST(req: Request) {
     if (!(await verifyPassword(password, row.password_hash))) continue;
 
     await q(
-      `UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login_at = now()
+      `UPDATE users SET phone_hash = $2, failed_attempts = 0, locked_until = NULL, last_login_at = now()
         WHERE id = $1`,
-      [row.id]
+      [row.id, hashPhone(phone)]
     );
     return issue(
       req,
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     `WITH next AS (
        SELECT id, CASE WHEN locked_until IS NOT NULL AND locked_until <= now()
                        THEN 1 ELSE failed_attempts + 1 END AS n
-         FROM users WHERE phone_hash = $1 AND active
+         FROM users WHERE phone_hash = ANY($1::text[]) AND active
      )
      UPDATE users u
         SET failed_attempts = next.n,
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
        FROM next
       WHERE u.id = next.id
       RETURNING (u.locked_until IS NOT NULL) AS locked`,
-    [hashPhone(phone), MAX_ATTEMPTS, LOCK_MINUTES]
+    [phoneHashCandidates(phone), MAX_ATTEMPTS, LOCK_MINUTES]
   );
   // A user with no password set lands here too — they are told to ask their
   // coordinator rather than being told the account exists.
