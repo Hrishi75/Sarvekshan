@@ -6,6 +6,8 @@ import { AppShell } from "@/components/AppShell";
 import { Card, Tag, Empty, scoreColor } from "@/components/ui";
 import { rupees, relativeDays, grantSlab } from "@/lib/format";
 import { IconChevron, IconExport, IconCamera, IconAlert, IconImage } from "@/components/icons";
+import { REPAIR_STATUS } from "@/lib/repair-input";
+import type { WorkStatus } from "@/lib/types";
 
 const STATE_TONE = { working: "good", partial: "warn", broken: "bad" } as const;
 const STATE_LABEL = { working: "GOOD", partial: "PARTIAL", broken: "BROKEN" } as const;
@@ -84,6 +86,15 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
     [id]
   );
 
+  const repairs = await q<{ id: string; label: string; status: WorkStatus; assigned_name: string | null; target_date: string | null }>(
+    `SELECT w.id, wt.label_en AS label, w.status, u.name AS assigned_name, w.target_date::text
+       FROM works w JOIN work_types wt ON wt.key=w.work_type_key
+       LEFT JOIN users u ON u.id=w.assigned_to_id
+      WHERE w.school_id=$1 AND w.org_id=$2
+      ORDER BY CASE WHEN w.status IN ('planned','in_progress') THEN 0 ELSE 1 END, w.created_at DESC`,
+    [id, user.org_id]
+  );
+
   const score = school.score == null ? null : Number(school.score);
   const released = Number(grant?.released ?? 0);
   const verified = Number(grant?.verified ?? 0);
@@ -96,8 +107,8 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
   return (
     <AppShell user={user}>
       {/* entity header */}
-      <div id="overview" className="scroll-mt-4 border-b border-hair bg-surface px-7 pt-4">
-        <nav className="mb-[10px] flex items-center gap-[6px] text-[12.5px] text-mute">
+      <div id="overview" className="scroll-mt-4 border-b border-hair bg-surface px-4 pt-4 sm:px-7">
+        <nav className="mb-[10px] flex flex-wrap items-center gap-[6px] text-[12.5px] text-mute">
           <Link href="/schools" className="hover:text-ink">Schools</Link>
           <IconChevron size={13} className="text-faint" />
           <Link href={`/schools?block=${encodeURIComponent(school.block ?? "")}`} className="hover:text-ink">
@@ -107,10 +118,10 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
           <span className="font-medium text-ink">{school.name}</span>
         </nav>
 
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex flex-col items-start justify-between gap-4 xl:flex-row xl:gap-6">
           <div className="min-w-0">
             <h1 className="mb-[7px] text-[27px] font-semibold tracking-[-0.028em]">{school.name}</h1>
-            <div className="flex items-center gap-[14px] text-[13px] text-mute">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-mute">
               <span className="num">UDISE {school.udise_code ?? "—"}</span>
               <span className="h-[3px] w-[3px] rounded-full bg-faint" />
               <span>{school.enrolment ?? "—"} pupils</span>
@@ -121,7 +132,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-5">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="text-right">
               <div className="flex items-baseline justify-end gap-[5px]">
                 <span className={`num text-[34px] font-semibold leading-none tracking-[-0.03em] ${scoreColor(score)}`}>
@@ -139,12 +150,12 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
             <div className="flex gap-2">
               <a
                 href={`/api/export?dataset=school&id=${school.id}`}
-                className="inline-flex h-[33px] items-center gap-[6px] rounded-[7px] border border-hair px-3 text-[13px] font-medium text-body hover:border-faint"
+                className="inline-flex min-h-11 items-center gap-[6px] rounded-[7px] border border-hair px-3 text-[13px] font-medium text-body hover:border-faint"
               >
                 <IconExport size={14} />
                 Report
               </a>
-              <Link href="/visit" className="inline-flex h-[33px] items-center gap-[6px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white">
+              <Link href={`/visit?school=${school.id}`} className="inline-flex min-h-11 items-center gap-[6px] rounded-[7px] bg-brand px-[13px] text-[13px] font-semibold text-white">
                 <IconCamera size={14} />
                 New audit
               </Link>
@@ -152,11 +163,12 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        <div className="mt-[18px] flex gap-[22px]">
+        <div className="mt-[18px] flex flex-wrap gap-x-4 gap-y-2">
           {[
             { label: "Overview", href: "#overview" },
             { label: "Grants", href: "#grants" },
             { label: "Facilities", href: "#facilities" },
+            { label: "Repairs", href: "#repairs" },
             { label: "Score", href: "#score" },
             { label: "Evidence", href: "#evidence" },
           ].map((t, i) => (
@@ -176,13 +188,23 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* body */}
-      <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-[14px] p-7">
+      <div className="grid gap-[14px] p-4 sm:p-7 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-[14px]">
+          <Card pad={false} className="scroll-mt-4 overflow-hidden" id="repairs">
+            <div className="flex items-center justify-between px-[18px] pb-3 pt-4">
+              <h2 className="text-[14.5px] font-semibold">Repairs</h2>
+              <span className="num text-[11px] text-mute">{repairs.length}</span>
+            </div>
+            {repairs.length === 0 ? <p className="px-[18px] pb-4 text-[13px] text-mute">No repairs recorded for this school yet.</p> : repairs.map((repair) => <Link key={repair.id} href={`/repairs/${repair.id}`} className="block border-t border-hair-soft px-[18px] py-3 hover:bg-surface-2">
+              <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[13px] font-medium">{repair.label}</span><Tag tone={REPAIR_STATUS[repair.status].tone}>{REPAIR_STATUS[repair.status].label}</Tag></div>
+              <p className="mt-1 text-[12px] text-mute">{repair.assigned_name ?? "Unassigned"}{repair.target_date ? ` · Target ${repair.target_date}` : ""}</p>
+            </Link>)}
+          </Card>
 
           {/* grant reconciliation */}
           {grant ? (
             <Card className="scroll-mt-4 !p-[17px_19px]" id="grants">
-              <div className="mb-[15px] flex items-center justify-between">
+              <div className="mb-[15px] flex flex-wrap items-center justify-between gap-2">
                 <span className="text-[14.5px] font-semibold tracking-[-0.01em]">
                   Composite School Grant — {grant.ay}
                 </span>
@@ -191,7 +213,7 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
                 </span>
               </div>
 
-              <div className="grid grid-cols-4 gap-px overflow-hidden rounded-[7px] border border-hair bg-hair">
+              <div className="grid grid-cols-2 gap-px sm:grid-cols-4 overflow-hidden rounded-[7px] border border-hair bg-hair">
                 <Stage label="Sanctioned" value={rupees(Number(grant.sanctioned ?? 0))} tone="good" />
                 <Stage label="Released" value={rupees(released)} tone={released >= Number(grant.sanctioned ?? 0) ? "good" : "warn"} sub={grant.released_on ?? undefined} />
                 <Stage label="Accounted" value={rupees(Number(grant.accounted ?? 0))} tone="warn" sub="paperwork" />
@@ -227,15 +249,15 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
               <>
                 <div className="eyebrow flex border-b border-hair-soft px-[19px] pb-2">
                   <span className="grow">Facility</span>
-                  <span className="w-[130px]">Last repaired</span>
-                  <span className="w-[62px] text-right">Reports</span>
+                  <span className="hidden w-[130px] sm:block">Last repaired</span>
+                  <span className="hidden w-[62px] sm:block text-right">Reports</span>
                   <span className="w-[92px] text-right">State</span>
                 </div>
                 {facilities.map((f) => (
                   <div key={f.facility_key} className="flex items-center border-b border-hair-soft/60 px-[19px] py-[11px] last:border-b-0">
                     <span className="grow text-[13.5px] font-medium">{f.label}</span>
-                    <span className="w-[130px] text-[12.5px] text-mute">{f.last_repaired ?? "Never"}</span>
-                    <span className="num w-[62px] text-right text-[12px] text-body">{f.reports}</span>
+                    <span className="hidden w-[130px] sm:block text-[12.5px] text-mute">{f.last_repaired ?? "Never"}</span>
+                    <span className="num hidden w-[62px] sm:block text-right text-[12px] text-body">{f.reports}</span>
                     <span className="w-[92px] text-right">
                       <Tag tone={STATE_TONE[f.state as keyof typeof STATE_TONE]}>
                         {STATE_LABEL[f.state as keyof typeof STATE_LABEL]}
@@ -272,8 +294,8 @@ export default async function SchoolPage({ params }: { params: Promise<{ id: str
             </div>
             {facilities.length === 0 ? (
               <p className="px-[18px] pb-1 text-[13px] leading-[1.5] text-mute">
-                No one has been to this school yet. There is a grant on record, but nothing
-                photographed against it &mdash; which is why it carries no score.
+                No facility conditions have been recorded at this school yet. Record the first
+                audit to start its evidence history and score.
               </p>
             ) : (
               <>
@@ -381,4 +403,3 @@ function PhotoSlot({ tone, date, caption }: { tone: "good" | "bad"; date: string
     </div>
   );
 }
-

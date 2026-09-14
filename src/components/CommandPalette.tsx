@@ -4,13 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SearchHit } from "@/app/api/search/route";
 import { scoreColor } from "./ui";
-import { IconSearch, IconGrid, IconSchool, IconAlert, IconCamera, IconGrant, IconCheckList } from "./icons";
+import { IconSearch, IconGrid, IconSchool, IconAlert, IconCamera, IconGrant, IconCheckList, IconRepair } from "./icons";
 
 type Cmd = { label: string; href: string; hint: string; icon: React.ReactNode };
 
 const COMMANDS: Cmd[] = [
   { label: "Overview", href: "/", hint: "district summary", icon: <IconGrid size={15} /> },
   { label: "Schools", href: "/schools", hint: "every school in the district", icon: <IconSchool size={15} /> },
+  { label: "Repairs", href: "/repairs", hint: "assign work, track costs, complete repairs", icon: <IconRepair size={15} /> },
   { label: "What survives after we leave", href: "/survival", hint: "survival curves, cost per lasting outcome", icon: <IconCheckList size={15} /> },
   { label: "Findings", href: "/findings", hint: "reversions, unverified grants, overdue checks", icon: <IconAlert size={15} /> },
   { label: "Grants", href: "/grants", hint: "sanctioned to seen on site", icon: <IconGrant size={15} /> },
@@ -135,11 +136,12 @@ export function CommandPalette() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Search schools, UDISE codes, findings"
-        className="flex h-[34px] w-full max-w-[420px] items-center gap-[9px] rounded-[7px] border border-hair bg-canvas px-[11px] text-left hover:border-faint"
+        className="flex h-[34px] min-w-0 w-full max-w-[420px] items-center gap-[9px] rounded-[7px] border border-hair bg-canvas px-[11px] text-left hover:border-faint"
       >
-        <IconSearch size={15} className="text-faint" />
-        <span className="text-[13px] text-faint">Search schools, UDISE codes, findings</span>
-        <span className="num ml-auto rounded-[4px] border border-hair px-[5px] text-[10.5px] text-faint">
+        <IconSearch size={15} className="shrink-0 text-faint" />
+        <span className="truncate text-[13px] text-faint sm:hidden">Search schools</span>
+        <span className="hidden truncate text-[13px] text-faint sm:inline">Search schools, UDISE codes, findings</span>
+        <span className="num ml-auto hidden shrink-0 rounded-[4px] border border-hair px-[5px] text-[10.5px] text-faint sm:inline">
           ⌘K
         </span>
       </button>

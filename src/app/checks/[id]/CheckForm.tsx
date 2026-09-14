@@ -6,11 +6,11 @@ import { compressImage, db, getPosition, newId } from "@/lib/offline";
 
 type Result = "functional" | "degraded" | "failed" | "inaccessible";
 
-const RESULTS: { key: Result; label: string; hi: string; tone: string }[] = [
-  { key: "functional", label: "Still working", hi: "अभी भी ठीक", tone: "bg-good text-white" },
-  { key: "degraded", label: "Partly working", hi: "आधा ठीक", tone: "bg-warn text-white" },
-  { key: "failed", label: "Broken again", hi: "फिर खराब", tone: "bg-bad text-white" },
-  { key: "inaccessible", label: "Could not see it", hi: "देख नहीं सका", tone: "bg-surface-2 text-body border border-hair" },
+const RESULTS: { key: Result; label: string; tone: string }[] = [
+  { key: "functional", label: "Still working", tone: "bg-good text-white" },
+  { key: "degraded", label: "Partly working", tone: "bg-warn text-white" },
+  { key: "failed", label: "Broken again", tone: "bg-bad text-white" },
+  { key: "inaccessible", label: "Could not see it", tone: "bg-surface-2 text-body border border-hair" },
 ];
 
 export function CheckForm({ checkId }: { checkId: string }) {
@@ -81,7 +81,6 @@ export function CheckForm({ checkId }: { checkId: string }) {
             }`}
           >
             <span>{r.label}</span>
-            <span className="text-sm font-normal opacity-80">{r.hi}</span>
           </button>
         ))}
       </div>
@@ -104,9 +103,13 @@ export function CheckForm({ checkId }: { checkId: string }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
+        maxLength={1000}
         placeholder="Anything to add (optional)"
         className="w-full rounded border border-hair bg-surface px-3 py-2 text-sm"
       />
+      <p className="text-xs leading-relaxed text-mute">
+        Keep people out of photos and do not record children&apos;s names or identifying details.
+      </p>
 
       <button
         onClick={save}

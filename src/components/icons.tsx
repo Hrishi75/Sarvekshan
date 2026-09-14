@@ -76,3 +76,33 @@ export const IconMap = ({ size = 16, className }: P) => (
     <path d="m9 4 6 2.5 5-2v13l-5 2-6-2.5-5 2v-13z" /><path d="M9 4v13" /><path d="M15 6.5v13" />
   </svg>
 );
+export const IconSignOut = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H9" />
+    <path d="M16 16.5 20.5 12 16 7.5" /><path d="M20.5 12H9" />
+  </svg>
+);
+export const IconLock = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <rect x="4" y="10" width="16" height="10.5" rx="2" />
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+  </svg>
+);
+
+export const IconRepair = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className}>
+    <path d="M14.5 6.5 18 3a6 6 0 0 0-7.5 7.5L3 18a2.1 2.1 0 0 0 3 3l7.5-7.5A6 6 0 0 0 21 6l-3.5 3.5z" />
+  </svg>
+);
+
+export const IconMenu = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className} aria-hidden="true">
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
+export const IconTeam = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className} aria-hidden="true">
+    <circle cx="9" cy="7" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 4a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-3-5.2" />
+  </svg>
+);

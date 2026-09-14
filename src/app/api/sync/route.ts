@@ -15,7 +15,7 @@ const Observation = z.object({
   school_id: z.uuid(),
   facility_key: z.string().min(1),
   state: z.enum(["working", "problem", "broken"]),
-  note_text: z.string().optional(),
+  note_text: z.string().max(1000).optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });
@@ -24,7 +24,7 @@ const Check = z.object({
   client_uuid: z.uuid(),
   check_id: z.uuid(),
   result: z.enum(["functional", "degraded", "failed", "inaccessible"]),
-  note_text: z.string().optional(),
+  note_text: z.string().max(1000).optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
   completed_at: z.string(),

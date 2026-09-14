@@ -47,7 +47,7 @@ export default async function CheckPage({
   if (!row) notFound();
 
   return (
-    <FieldShell title={row.facility_label} subtitle={row.school_name} back="/checks">
+    <FieldShell title={row.facility_label} subtitle={row.school_name} back="/checks" user={user}>
       <div className="flex flex-col gap-4">
         <div className="rounded border border-hair bg-surface px-4 py-3">
           <div className="flex items-center justify-between gap-2">

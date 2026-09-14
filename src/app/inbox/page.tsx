@@ -18,10 +18,11 @@ type Row = {
   has_voice: boolean;
 };
 
-export default async function InboxPage() {
+export default async function InboxPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await currentUser();
   if (!user) redirect("/signin");
   if (user.role === "volunteer") redirect("/");
+  const { error } = await searchParams;
 
   const rows = await q<Row>(
     `SELECT o.id, o.school_id, s.name AS school_name, f.label_en AS facility_label,
@@ -42,7 +43,8 @@ export default async function InboxPage() {
   );
 
   return (
-    <FieldShell title="Triage inbox" subtitle={`${rows.length} waiting`} back="/">
+    <FieldShell title="Triage inbox" subtitle={`${rows.length} waiting`} back="/" user={user}>
+      {error && <p role="alert" className="mb-4 rounded-[7px] bg-bad-soft p-3 text-[13px] text-bad">{error}</p>}
       {rows.length === 0 ? (
         <Empty>Nothing waiting. Everything reported has been acted on.</Empty>
       ) : (
@@ -78,7 +80,7 @@ export default async function InboxPage() {
                     value="create_work"
                     className="tap flex-1 rounded bg-brand px-3 text-sm font-semibold text-white"
                   >
-                    Make it work
+                    Plan repair
                   </button>
                   <button
                     name="action"

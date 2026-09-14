@@ -21,8 +21,11 @@ const OFFSETS = [7, 90, 180, 365];
  * Survival = share of completed work still fully functional at each checkpoint.
  * Only checks that were actually done count; a missed check is excluded from the
  * denominator rather than assumed good — an unchecked school is a gap, not a pass.
+ *
+ * `orgId` null means every org, which is what the public board asks for: it is not
+ * signed in, so it has no org to scope to. Every signed-in caller passes its own.
  */
-export async function survivalByWorkType(orgId: string): Promise<SurvivalSeries[]> {
+export async function survivalByWorkType(orgId: string | null): Promise<SurvivalSeries[]> {
   const rows = await q<{
     work_type_key: string;
     label_en: string;
@@ -36,7 +39,8 @@ export async function survivalByWorkType(orgId: string): Promise<SurvivalSeries[
        FROM checks c
        JOIN works w      ON w.id = c.work_id
        JOIN work_types wt ON wt.key = w.work_type_key
-      WHERE c.org_id = $1 AND c.state = 'done' AND c.result IS NOT NULL
+      WHERE ($1::uuid IS NULL OR c.org_id = $1)
+        AND c.state = 'done' AND c.result IS NOT NULL
       GROUP BY 1,2,3
       ORDER BY 1,3`,
     [orgId]
@@ -48,7 +52,7 @@ export async function survivalByWorkType(orgId: string): Promise<SurvivalSeries[
     spend: string | null;
   }>(
     `SELECT work_type_key, count(*) AS n_works, sum(actual_cost_paise) AS spend
-       FROM works WHERE org_id = $1 AND status = 'done'
+       FROM works WHERE ($1::uuid IS NULL OR org_id = $1) AND status = 'done'
       GROUP BY 1`,
     [orgId]
   );

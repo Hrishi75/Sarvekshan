@@ -13,8 +13,10 @@ export type Finding = {
 /**
  * Findings are derived, never stored — each one is a live query against evidence.
  * Money is formatted here, in the app, never in SQL.
+ *
+ * `orgId` null means every org — the public board has no session to scope to.
  */
-export async function findingsFor(orgId: string, limit = 40): Promise<Finding[]> {
+export async function findingsFor(orgId: string | null, limit = 40): Promise<Finding[]> {
   const [reverts, grants, late, noBoard] = await Promise.all([
     q<{ school_id: string; school_name: string; facility: string; days: string; reporters: string }>(
       `SELECT r.school_id, s.name AS school_name, f.label_en AS facility,
@@ -23,7 +25,7 @@ export async function findingsFor(orgId: string, limit = 40): Promise<Finding[]>
          FROM reversions r
          JOIN schools s ON s.id = r.school_id
          JOIN facility_types f ON f.key = r.facility_key
-        WHERE s.org_id = $1
+        WHERE ($1::uuid IS NULL OR s.org_id = $1)
         ORDER BY r.failed_at DESC LIMIT 20`,
       [orgId]
     ),
@@ -32,7 +34,7 @@ export async function findingsFor(orgId: string, limit = 40): Promise<Finding[]>
               g.amount_released_paise::text AS released,
               g.amount_verified_paise::text AS verified
          FROM grants g JOIN schools s ON s.id = g.school_id
-        WHERE s.org_id = $1
+        WHERE ($1::uuid IS NULL OR s.org_id = $1)
           AND g.amount_released_paise > 0
           AND COALESCE(g.amount_verified_paise, 0) < g.amount_released_paise * 0.25
         ORDER BY g.amount_released_paise DESC LIMIT 12`,
@@ -44,14 +46,14 @@ export async function findingsFor(orgId: string, limit = 40): Promise<Finding[]>
          FROM checks c
          JOIN schools s ON s.id = c.school_id
          JOIN facility_types f ON f.key = c.facility_key
-        WHERE s.org_id = $1 AND c.state IN ('pending','sent') AND c.due_on < current_date
+        WHERE ($1::uuid IS NULL OR s.org_id = $1) AND c.state IN ('pending','sent') AND c.due_on < current_date
         ORDER BY c.due_on LIMIT 12`,
       [orgId]
     ),
     q<{ school_id: string; school_name: string }>(
       `SELECT s.id AS school_id, s.name AS school_name
          FROM schools s
-        WHERE s.org_id = $1
+        WHERE ($1::uuid IS NULL OR s.org_id = $1)
           AND NOT EXISTS (
             SELECT 1 FROM observations o
              WHERE o.school_id = s.id AND o.facility_key = 'notice_board')

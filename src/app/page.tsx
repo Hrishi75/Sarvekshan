@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { q, q1 } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import { survivalByWorkType } from "@/lib/survival";
@@ -8,10 +7,26 @@ import { AppShell } from "@/components/AppShell";
 import { SurvivalChart } from "@/components/SurvivalChart";
 import { Card, Tag, rupees } from "@/components/ui";
 import { IconExport, IconUp, IconDown } from "@/components/icons";
+import { NextActions } from "@/components/NextActions";
+import { PublicBoard } from "./PublicBoard";
 
-export default async function Overview() {
+export default async function Overview({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; block?: string }>;
+}) {
   const user = await currentUser();
-  if (!user) redirect("/signin");
+  // Signed out is not a dead end. The register has a public half — which school
+  // is in what condition — and this is where it lives; sign-in is a button on it.
+  if (!user) {
+    const sp = await searchParams;
+    return (
+      <PublicBoard
+        search={sp.q?.trim().slice(0, 200) || ""}
+        block={sp.block?.trim().slice(0, 150) || ""}
+      />
+    );
+  }
 
   const stats = await q1<{
     schools: string;
@@ -64,27 +79,29 @@ export default async function Overview() {
 
   return (
     <AppShell user={user}>
-      <div className="p-6">
-        <div className="mb-5 flex items-end justify-between">
+      <div className="mx-auto max-w-[1400px] p-4 sm:p-6 lg:p-7">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-[24px] font-semibold tracking-[-0.025em]">Lucknow district</h1>
-            <p className="mt-[3px] text-[13.5px] text-mute">
+            <p className="page-kicker">Operations overview</p>
+            <h1 className="text-[28px] font-semibold tracking-[-0.035em]">Lucknow district</h1>
+            <p className="mt-1 text-[13.5px] text-mute">
               {stats?.schools ?? 0} schools tracked · {scoreTrend[0]?.n ?? 0} follow-up checks
               completed
             </p>
           </div>
           <a
             href="/api/export?dataset=schools"
-            className="inline-flex h-[31px] items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[11px] text-[12.5px] font-medium text-body hover:border-faint"
+            className="inline-flex min-h-10 items-center gap-[6px] rounded-[7px] border border-hair bg-surface px-[13px] text-[12.5px] font-medium text-body hover:border-faint hover:bg-surface-2"
           >
             <IconExport size={13} />
             Export CSV
           </a>
         </div>
 
+        <NextActions user={user} />
         {/* stat row */}
-        <div className="mb-3 grid grid-cols-4 gap-3">
-          <Card>
+        <div className="mb-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <Card className="relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-brand">
             <div className="mb-[9px] text-[12px] font-medium text-mute">Average score</div>
             <div className="flex items-baseline gap-2">
               <span className="num text-[27px] font-semibold tracking-[-0.02em]">{avg ?? "—"}</span>
@@ -94,7 +111,7 @@ export default async function Overview() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-brand">
             <div className="mb-[9px] text-[12px] font-medium text-mute">Audits this month</div>
             <div className="flex items-baseline gap-2">
               <span className="num text-[27px] font-semibold tracking-[-0.02em]">{auditsMonth}</span>
@@ -124,7 +141,7 @@ export default async function Overview() {
             </div>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-brand">
             <div className="mb-[9px] text-[12px] font-medium text-mute">Grants tracked</div>
             <div className="num text-[27px] font-semibold tracking-[-0.02em]">
               {rupees(released, true)}
@@ -137,7 +154,7 @@ export default async function Overview() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-[3px] before:bg-bad">
             <div className="mb-[9px] text-[12px] font-medium text-mute">Reverted repairs</div>
             <div className="num text-[27px] font-semibold tracking-[-0.02em] text-bad">
               {stats?.reversions ?? 0}
@@ -149,8 +166,8 @@ export default async function Overview() {
         </div>
 
         {/* survival + findings */}
-        <div className="grid grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] gap-3">
-          <Card className="!p-[18px_20px_14px_20px]">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+          <Card className="min-w-0 !p-[20px_22px_16px_22px]">
             <div className="text-[14.5px] font-semibold tracking-[-0.01em]">
               What survives after we leave
             </div>
@@ -167,7 +184,7 @@ export default async function Overview() {
             )}
           </Card>
 
-          <Card pad={false} className="flex flex-col overflow-hidden">
+          <Card pad={false} className="flex min-w-0 flex-col overflow-hidden">
             <div className="flex items-center justify-between px-[18px] pb-3 pt-4">
               <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Needs attention</span>
               <span className="num text-[11px] text-faint">{findings.length}</span>
@@ -179,7 +196,7 @@ export default async function Overview() {
                 <Link
                   key={i}
                   href={`/schools/${f.school_id}`}
-                  className="flex items-start gap-[11px] border-t border-hair-soft px-[18px] py-[11px] hover:bg-surface-2"
+                  className="group flex items-start gap-[11px] border-t border-hair-soft px-[18px] py-[12px] hover:bg-surface-2"
                 >
                   <span
                     className={`mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full ${
