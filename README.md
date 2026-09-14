@@ -224,6 +224,11 @@ against your migrated PostgreSQL database. The database tests use isolated fixtu
 transaction and roll them back, covering permissions, duplicate triage, stale edits,
 costs, completion, and automatic follow-ups.
 
+Run `npm run test:auth` against the migrated database before deploying. It creates and
+removes a disposable organisation and user while exercising invitation activation,
+one-time use, signed session cookies, failed-password accounting, password sign-in,
+tamper rejection, and sign-out.
+
 `npm run seed` builds an open queue to work through: fourteen repairs across planned and
 in progress, some past their target date, some with no owner, some not yet estimated. Every
 one is linked to the report it came from, so a record shows where it started. The mix is
