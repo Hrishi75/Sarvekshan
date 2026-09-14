@@ -100,3 +100,9 @@ export const IconMenu = ({ size = 16, className }: P) => (
     <path d="M4 6h16M4 12h16M4 18h16" />
   </svg>
 );
+
+export const IconTeam = ({ size = 16, className }: P) => (
+  <svg {...base(size)} className={className} aria-hidden="true">
+    <circle cx="9" cy="7" r="3" /><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 4a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-3-5.2" />
+  </svg>
+);

@@ -26,7 +26,7 @@ CREATE TABLE orgs (
 CREATE TABLE users (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id      uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
-  -- phone is stored hashed and kept separable from anything they report
+  -- phone is stored as a keyed HMAC and kept separable from anything they report
   phone_hash  text NOT NULL,
   phone_last4 text,
   name        text NOT NULL,

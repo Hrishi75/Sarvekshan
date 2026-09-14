@@ -1,6 +1,7 @@
 {
-  "name": "Sarvekshan School Repair Register",
+  "name": "Sarvekshan",
   "short_name": "Sarvekshan",
+  "description": "School repair evidence and operations.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F6F6F4",

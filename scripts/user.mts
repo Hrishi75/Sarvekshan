@@ -14,7 +14,14 @@
  */
 import { readFileSync } from "node:fs";
 import { Pool } from "pg";
-import { generateTempPassword, hashPassword, hashPhone, isValidPhone, normalisePhone } from "@/lib/password";
+import {
+  generateTempPassword,
+  hashPassword,
+  hashPhone,
+  isValidPhone,
+  normalisePhone,
+  phoneHashCandidates,
+} from "@/lib/password";
 import { passwordProblem } from "@/lib/password-rules";
 import {
   generateInvitationCode,
@@ -22,7 +29,7 @@ import {
   INVITATION_TTL_DAYS,
 } from "@/lib/invitation";
 
-// Load the two values this CLI uses from .env.local on a laptop. Runtime
+// Load the values this CLI uses from .env.local on a laptop. Runtime
 // variables win in deployment and are never printed.
 try {
   for (const line of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split("\n")) {
@@ -116,6 +123,7 @@ async function add() {
   }
 
   const phone = normalisePhone(phoneIn);
+  const phoneHashes = phoneHashCandidates(phone);
   let orgId = flag("org");
   if (!orgId) {
     const { rows } = await pool.query(`SELECT id, name FROM orgs ORDER BY name`);
@@ -133,6 +141,12 @@ async function add() {
   }
   const invitation = chosenPassword ? null : generateInvitationCode();
 
+  const { rows: existing } = await pool.query(
+    `SELECT id FROM users WHERE org_id=$1 AND phone_hash=ANY($2::text[])`,
+    [orgId, phoneHashes]
+  );
+  if (existing.length > 0) die("Somebody in that org already uses that number.");
+
   const { rows } = await pool.query(
     `INSERT INTO users (org_id, phone_hash, phone_last4, name, role, block, is_local_checker,
                         password_hash, password_set_at, must_change_password, activated_at,
@@ -143,7 +157,7 @@ async function add() {
              $9, CASE WHEN $9::text IS NULL THEN NULL ELSE now() + ($10::int * interval '1 day') END)
      ON CONFLICT (org_id, phone_hash) DO NOTHING
      RETURNING name`,
-    [orgId, hashPhone(phone), phone.slice(-4), name, role, block, has("local-checker"),
+    [orgId, phoneHashes[0], phone.slice(-4), name, role, block, has("local-checker"),
      chosenPassword ? await hashPassword(chosenPassword) : null,
      invitation ? hashInvitationCode(invitation) : null, INVITATION_TTL_DAYS]
   );
@@ -161,9 +175,9 @@ async function invite() {
   const { rows: candidates } = await pool.query(
     `SELECT u.id, u.name, u.role, o.name AS org
        FROM users u JOIN orgs o ON o.id=u.org_id
-      WHERE u.phone_hash=$1 AND u.active AND u.password_hash IS NULL
+      WHERE u.phone_hash=ANY($1::text[]) AND u.active AND u.password_hash IS NULL
         AND ($2::uuid IS NULL OR u.org_id=$2)`,
-    [hashPhone(phone), orgId ?? null]
+    [phoneHashCandidates(phone), orgId ?? null]
   );
   if (candidates.length === 0) {
     die("No inactive account has that number. Add the user first, or use the password command for recovery.");
@@ -175,12 +189,12 @@ async function invite() {
   const code = generateInvitationCode();
   const { rows } = await pool.query(
     `UPDATE users
-        SET invitation_code_hash = $2,
+        SET phone_hash = $4, invitation_code_hash = $2,
             invitation_expires_at = now() + ($3::int * interval '1 day'),
             invitation_attempts = 0, invitation_locked_until = NULL
       WHERE id = $1
       RETURNING name, role`,
-    [candidates[0].id, hashInvitationCode(code), INVITATION_TTL_DAYS]
+    [candidates[0].id, hashInvitationCode(code), INVITATION_TTL_DAYS, hashPhone(phone)]
   );
   for (const row of rows) invitationBanner(`${row.name} — ${row.role}`, phone, code);
 }
@@ -201,14 +215,14 @@ async function password() {
   // every device that was signed in as this person is signed out by this.
   const { rows } = await pool.query(
     `UPDATE users
-        SET password_hash = $2, password_set_at = now(), must_change_password = $3,
+        SET phone_hash = $5, password_hash = $2, password_set_at = now(), must_change_password = $3,
             failed_attempts = 0, locked_until = NULL, phone_last4 = $4,
             activated_at = CASE WHEN $3 THEN activated_at ELSE COALESCE(activated_at, now()) END,
             invitation_code_hash = NULL, invitation_expires_at = NULL,
             invitation_attempts = 0, invitation_locked_until = NULL
-      WHERE phone_hash = $1 AND active
+      WHERE phone_hash = ANY($1::text[]) AND active
       RETURNING name, role`,
-    [hashPhone(phone), await hashPassword(value), temp, phone.slice(-4)]
+    [phoneHashCandidates(phone), await hashPassword(value), temp, phone.slice(-4), hashPhone(phone)]
   );
   if (rows.length === 0) die("No active user has that number. Try: npm run user list");
 
@@ -222,11 +236,11 @@ async function lock() {
   const clear = has("clear");
   const { rows } = await pool.query(
     clear
-      ? `UPDATE users SET failed_attempts = 0, locked_until = NULL
-          WHERE phone_hash = $1 AND active RETURNING name`
-      : `UPDATE users SET locked_until = now() + interval '100 years'
-          WHERE phone_hash = $1 AND active RETURNING name`,
-    [hashPhone(phone)]
+      ? `UPDATE users SET phone_hash = $2, failed_attempts = 0, locked_until = NULL
+          WHERE phone_hash = ANY($1::text[]) AND active RETURNING name`
+      : `UPDATE users SET phone_hash = $2, locked_until = now() + interval '100 years'
+          WHERE phone_hash = ANY($1::text[]) AND active RETURNING name`,
+    [phoneHashCandidates(phone), hashPhone(phone)]
   );
   if (rows.length === 0) die("No active user has that number.");
   console.log(`\n  ${rows.map((r) => r.name).join(", ")} — ${clear ? "unlocked" : "locked out"}.\n`);

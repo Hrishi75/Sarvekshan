@@ -103,9 +103,13 @@ export function CheckForm({ checkId }: { checkId: string }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         rows={2}
+        maxLength={1000}
         placeholder="Anything to add (optional)"
         className="w-full rounded border border-hair bg-surface px-3 py-2 text-sm"
       />
+      <p className="text-xs leading-relaxed text-mute">
+        Keep people out of photos and do not record children&apos;s names or identifying details.
+      </p>
 
       <button
         onClick={save}
